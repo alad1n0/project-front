@@ -1,3 +1,86 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    line-height: 1.5;
+    font-family: Arial, sans-serif;
+}
+
+ul,
+ol {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+button {
+    all: unset;
+    display: inline-block;
+    cursor: pointer;
+}
+
+input,
+textarea,
+select,
+button {
+    font: inherit;
+    outline: none;
+    border: none;
+    background: none;
+}
+
+textarea {
+    resize: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+strong,
+b {
+    font-weight: bold;
+}
+
+em,
+i {
+    font-style: italic;
+}
+
+:root{
+    --font-family-main:  "Montserrat Alternates", serif;
+    --color-red: #f1322d;
+    --transition-time-all: all ease-in-out 300ms;
+}
+
+body.no-scroll {
+    overflow-y: hidden;
+}
