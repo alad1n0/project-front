@@ -24,7 +24,6 @@ const MainLayout: FC<IChildSubContainerAuth> = ({ children }) => {
         handleResize();
         window.addEventListener("resize", handleResize);
 
-        // Після того як все ініціалізовано, встановлюємо isLoaded в true
         setIsLoaded(true);
 
         return () => window.removeEventListener("resize", handleResize);

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import Cookies from "js-cookie";
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -17,14 +18,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     const login = (access: string, refresh: string) => {
-        localStorage.setItem("access_token", access);
-        localStorage.setItem("refresh_token", refresh);
+        Cookies.set("access_token", access, { expires: 7, secure: true, sameSite: "Strict", path: "/" });
+        Cookies.set("refresh_token", refresh, { expires: 30, secure: true, sameSite: "Strict", path: "/" });
         setIsAuthenticated(true);
     };
 
     const logout = async () => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
+        Cookies.remove("access_token");
+        Cookies.remove("refresh_token");
         setIsAuthenticated(false);
     };
 
