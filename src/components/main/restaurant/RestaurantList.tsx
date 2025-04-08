@@ -28,6 +28,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, toggleFavo
                                     <HeartDislikeSvg className="btn_add_wishlist_svg" />
                                 )}
                             </button>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <Link href={`/restaurant/${restaurant.id}`}><img className="photo_card_restaurant" src={restaurant.banner} alt={restaurant.name}/></Link>
                             <div className="box_rating_card_restaurant">
                                 <StarsSvg className="icon_rating_card_restaurant"/>

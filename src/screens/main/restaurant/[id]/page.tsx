@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
+import React, {useEffect, useLayoutEffect, useRef, useState} from "react";
 import {
     ArrowSvg,
     BackArrowSvg,
@@ -21,9 +21,6 @@ export default function RestaurantDetails() {
     const [showLeftArrow, setShowLeftArrow] = useState(false);
     const [showRightArrow, setShowRightArrow] = useState(false);
     const listRef = useRef<HTMLUListElement | null>(null);
-    const isDragging = useRef(false);
-    const startX = useRef(0);
-    const scrollLeft = useRef(0);
 
     const [restaurant, setRestaurant] = useState<OneRestaurant | null>(null);
 
