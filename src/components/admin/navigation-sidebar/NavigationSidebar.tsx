@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
     LayoutDashboard,
@@ -14,7 +14,6 @@ import {
     Gem,
     LogOut,
 } from "lucide-react";
-import { useState } from "react";
 
 const routes = [
     {
@@ -61,12 +60,6 @@ const routes = [
 
 export function NavigationSidebar() {
     const pathname = usePathname();
-    const router = useRouter();
-    const [isClient, setIsClient] = useState(false);
-
-    const handleLogout = async () => {
-
-    };
 
     return (
         <div className="navigation-sidebar">

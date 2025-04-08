@@ -14,7 +14,7 @@ import CitySelector from "@/components/ui/select/CitySelect";
 import { useAuth } from "@/provider/AuthProvider";
 import RegistrationModal from "@/components/header/modal/RegistrationModal";
 import CartModal from "@/components/header/modal/CartModal";
-import { useRouter } from 'next/navigation';
+import {usePathname, useRouter} from 'next/navigation';
 
 interface MobileMenuProps {
     menuOpen: boolean;
@@ -26,6 +26,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ menuOpen, toggleMenu }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
     const router = useRouter();
+    const pathname = usePathname();
+
+    useEffect(() => {
+        setModalOpen(false);
+        setCartOpen(false);
+    }, [pathname]);
 
     useEffect(() => {
         if (menuOpen) {
@@ -86,7 +92,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ menuOpen, toggleMenu }) => {
                     <div className="box_top_content_mobile_menu">
                         <nav>
                             <ul className="list_menu_link_mobile">
-                                <li><Link className="link_mobile_menu" href={"/restaurant"}>Заклади</Link></li>
+                                <li><button className="link_mobile_menu" onClick={() => {toggleMenu();router.push("/restaurant");}}>Заклади</button></li>
                                 <li><Link className="link_mobile_menu" href="#">Акції</Link></li>
                                 <li><Link className="link_mobile_menu" href="#">Про нас</Link></li>
                                 <li><Link className="link_mobile_menu" href="#">Доставка та оплата</Link></li>

@@ -1,12 +1,36 @@
-"use client";
+"use client"
 
 import React, { useState } from "react";
+import {useAdminLoginMutation} from "@/screens/admin/hooks/auth/useSendOtpMutation";
+import {useAuthAdmin} from "@/provider/AdminAuthProvider";
+import {useRouter} from "next/navigation";
 
 export default function AdminLoginPage() {
+    const [phone, setPhone] = useState("");
+    const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
+
+    const { mutateAsync: adminLogin } = useAdminLoginMutation();
+    const { login } = useAuthAdmin();
 
     async function onSubmit() {
+        setIsLoading(true);
 
+        try {
+            const response = await adminLogin({ email: phone, password });
+
+            if (response?.data?.data.access_token && response?.data?.data.refresh_token) {
+                login(response?.data?.data.access_token, response?.data?.data.refresh_token)
+            }
+
+            router.push("/admin/dashboard");
+
+        } catch (error) {
+            console.error("Login failed:", error);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -23,6 +47,8 @@ export default function AdminLoginPage() {
                             type="text"
                             name="phone"
                             placeholder="name@example.com"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
                             className="form-control"
                         />
                     </div>
@@ -32,10 +58,18 @@ export default function AdminLoginPage() {
                             type="password"
                             name="password"
                             placeholder="********"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             className="form-control password-input"
                         />
                     </div>
-                    <button className="continue-button">Sign in</button>
+                    <button
+                        onClick={onSubmit}
+                        className="continue-button"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? "Signing in..." : "Sign in"}
+                    </button>
                 </div>
             </div>
         </div>

@@ -11,7 +11,7 @@ interface IChildSubContainerAuth {
 
 const MainLayout: FC<IChildSubContainerAuth> = ({ children }) => {
     const pathname = usePathname();
-    const isRestaurantPage = pathname.startsWith("/restaurant");
+    const isRestaurantPage = pathname.startsWith("/restaurant/");
 
     const [isMobile, setIsMobile] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);

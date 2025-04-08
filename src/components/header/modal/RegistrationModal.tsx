@@ -5,7 +5,7 @@ import {useSendOtpMutation} from "@/components/header/hooks/useSendOtpMutation";
 import {useVerifyOtpMutation} from "@/components/header/hooks/useVerifyOtpMutation";
 import {useRouter} from "next/navigation";
 import {useAuth} from "@/provider/AuthProvider";
-import {signIn} from "next-auth/react";
+import {signIn, signOut, useSession} from "next-auth/react";
 import {useQueryClient} from "@tanstack/react-query";
 
 interface RegisterModalProps {
@@ -22,7 +22,13 @@ const RegistrationForm: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => 
     const [error, setError] = useState("");
     const [timer, setTimer] = useState(120);
     const [canResend, setCanResend] = useState(false);
+    const [userInfoStep, setUserInfoStep] = useState(false);
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [accessToken, setAccessToken] = useState("");
+    const [refreshToken, setRefreshToken] = useState("");
     const queryClient = useQueryClient()
+    const { data: session } = useSession();
 
     const { mutateAsync: sendOtp } = useSendOtpMutation();
     const { mutateAsync: verifyOtp } = useVerifyOtpMutation();
@@ -53,6 +59,13 @@ const RegistrationForm: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => 
         }
     }, [timer]);
 
+    useEffect(() => {
+        if (typeof window !== "undefined" && session?.access_token) {
+            localStorage.setItem("access_token", session.access_token);
+            signOut();
+        }
+    }, [session?.access_token]);
+
     if (!isOpen) return null;
 
     const validatePhoneNumber = (phone: string) => {
@@ -76,21 +89,37 @@ const RegistrationForm: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => 
 
         try {
             const response = await verifyOtp({ phone, code });
-            console.log("Відповідь на запит верифікації OTP:", response?.data?.data);
 
             if (response?.data?.data.access_token && response?.data?.data.refresh_token) {
-                login(response?.data?.data.access_token, response?.data?.data.refresh_token)
+                setAccessToken(response.data.data.access_token);
+                setRefreshToken(response.data.data.refresh_token);
+                setUserInfoStep(true);
             }
-
-            router.push("/profile");
         } catch (error) {
             console.error("Помилка при верифікації OTP:", error);
         }
+    };
 
+    const handleUserInfoSubmit = async () => {
+        try {
+
+
+            login(accessToken, refreshToken);
+            router.push("/profile");
+            onClose();
+            resetState();
+        } catch (error) {
+            console.error("Помилка при збереженні інформації:", error);
+        }
+    };
+
+    const resetState = () => {
         setPhoneEntered(false);
+        setUserInfoStep(false);
         setPhoneNumber("");
         setOtp(new Array(4).fill(""));
-        onClose();
+        setFirstName("");
+        setLastName("");
     };
 
     const formatTime = (seconds: number) => {
@@ -128,7 +157,37 @@ const RegistrationForm: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => 
                             <CloseSvg className="icon_close_modal" />
                         </button>
                     </div>
-                    {phoneEntered ? (
+
+                    {userInfoStep ? (
+                        <>
+                            <div className="modal-body">
+                                <h3>Як вас звати?</h3>
+                            </div>
+                            <div>
+                                <div className="form-group">
+                                    <label className="control-label">Ім’я</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Введіть ім’я"
+                                        value={firstName}
+                                        className="form-control"
+                                        onChange={(e) => setFirstName(e.target.value)}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="control-label">Прізвище</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Введіть прізвище"
+                                        value={lastName}
+                                        className="form-control"
+                                        onChange={(e) => setLastName(e.target.value)}
+                                    />
+                                </div>
+                                <button onClick={handleUserInfoSubmit} className="continue-button">Зареєструватись</button>
+                            </div>
+                        </>
+                    ) : phoneEntered ? (
                         <>
                             <div className="modal-body">
                                 <h3>Код підтвердження</h3>

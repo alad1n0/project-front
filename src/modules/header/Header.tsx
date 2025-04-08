@@ -44,6 +44,8 @@ export default function Header() {
             setModalOpen(true);
             return;
         }
+
+        router.push("/profile?tab=saved");
     }
 
     const toggleMenu = () => {
@@ -133,9 +135,9 @@ export default function Header() {
                                 <SearchSvg className="icon_custom_header"/>
                             </Link>
 
-                            <Link href="#" onClick={handleLike} className="link_custom_header">
+                            <button onClick={handleLike} className="link_custom_header">
                                 <HeartHeaderSvg className="icon_custom_header"/>
-                            </Link>
+                            </button>
 
                             <button type="button" className="link_custom_header" onClick={toggleModal}>
                                 <ProfileSvg className="icon_custom_header"/>

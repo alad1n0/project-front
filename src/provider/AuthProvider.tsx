@@ -18,13 +18,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     const login = (access: string, refresh: string) => {
-        Cookies.set("access_token", access, { expires: 7, secure: true, sameSite: "Strict", path: "/" });
-        Cookies.set("refresh_token", refresh, { expires: 30, secure: true, sameSite: "Strict", path: "/" });
+        localStorage.setItem("access_token", access);
+        Cookies.set("refresh_token", refresh, { expires: 30, secure: true });
         setIsAuthenticated(true);
     };
 
     const logout = async () => {
-        Cookies.remove("access_token");
+        localStorage.removeItem("access_token");
         Cookies.remove("refresh_token");
         setIsAuthenticated(false);
     };

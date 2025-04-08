@@ -43,6 +43,11 @@ export {default as RestCloseSvg} from "@/assets/icons/res_close.svg"
 export {default as LogoutSvg} from "@/assets/icons/logout.svg"
 export {default as QuestionsSvg} from "@/assets/icons/questions.svg"
 export {default as TrackSvg} from "@/assets/icons/track.svg"
+export {default as ProfileIconSvg} from "@/assets/icons/profile-icon.svg"
+export {default as EditSvg} from "@/assets/icons/edit.svg"
+export {default as ProfileFillSvg} from "@/assets/icons/profile-fill.svg"
+export {default as QuestionsFillSvg} from "@/assets/icons/qustion-fill.svg"
+export {default as TrackOrderSvg} from "@/assets/icons/track-order.svg"
 
 // Image
 export {default as PhotoPizza} from "@/assets/image/photo_pizza.png"

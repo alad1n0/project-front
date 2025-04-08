@@ -1,25 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import Cookies from "js-cookie";
 
-interface AuthContextType {
+interface AdminAuthContextType {
     isAuthenticated: boolean;
     login: (access: string, refresh: string) => void;
     logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AdminAuthContext = createContext<AdminAuthContextType | null>(null);
 
 export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem("access_token");
+        const token = Cookies.get("access_token");
         setIsAuthenticated(!!token);
     }, []);
 
     const login = (access: string, refresh: string) => {
-        Cookies.set("admin_access_token", access, { expires: 7, secure: true, sameSite: "Strict", path: "/" });
-        Cookies.set("admin_refresh_token", refresh, { expires: 30, secure: true, sameSite: "Strict", path: "/" });
+        Cookies.set("admin_access_token", access, { expires: 7 });
+        Cookies.set("admin_refresh_token", refresh, { expires: 30 });
         setIsAuthenticated(true);
     };
 
@@ -30,14 +30,14 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+        <AdminAuthContext.Provider value={{ isAuthenticated, login, logout }}>
             {children}
-        </AuthContext.Provider>
+        </AdminAuthContext.Provider>
     );
 };
 
 export const useAuthAdmin = () => {
-    const context = useContext(AuthContext);
+    const context = useContext(AdminAuthContext);
     if (!context) {
         throw new Error("useAuth must be used within an AuthProvider");
     }
