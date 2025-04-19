@@ -4,7 +4,7 @@ import React, {useEffect, useState} from "react";
 import RestaurantList from "@/components/main/restaurant/RestaurantList";
 import {Restaurant} from "@/types/restaurant/interfaces";
 import {useGetSavedRestaurantList} from "@/components/main/profile/hooks/useGetSavedRestaurantList";
-import {useActionsFavorite} from "@/screens/main/hooks/useActionsFavorite";
+import {useActionsFavorite} from "@/screens/main/hooks/favorite/useActionsFavorite";
 
 const categories = ["Заклади", "Їжа"];
 
@@ -45,17 +45,19 @@ const SavedItems = () => {
             <h1>Збережене</h1>
 
             <div className="tabs_saved_items">
-                <ul className="list_tabs_saved">
-                    {categories.map((category) => (
-                        <li
-                            key={category}
-                            className={`item_tabs_food ${activeTab === category ? "active" : ""}`}
-                            onClick={() => setActiveTab(category)}
-                        >
-                            <a>{category}</a>
-                        </li>
-                    ))}
-                </ul>
+                {(restaurants.length > 0 /* || products.length > 0 */) && (
+                    <ul className="list_tabs_saved">
+                        {categories.map((category) => (
+                            <li
+                                key={category}
+                                className={`item_tabs_food ${activeTab === category ? "active" : ""}`}
+                                onClick={() => setActiveTab(category)}
+                            >
+                                <a>{category}</a>
+                            </li>
+                        ))}
+                    </ul>
+                )}
 
                 {activeTab === "Заклади" && (
                     <div className="section_restaurant">
@@ -75,7 +77,6 @@ const SavedItems = () => {
                             products={products}
                             toggleFavorite={toggleFavoriteProduct}
                         /> */}
-                            <p>Тут будуть продукти</p>
                         </div>
                     </div>
                 )}

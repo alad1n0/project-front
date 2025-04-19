@@ -48,6 +48,8 @@ export {default as EditSvg} from "@/assets/icons/edit.svg"
 export {default as ProfileFillSvg} from "@/assets/icons/profile-fill.svg"
 export {default as QuestionsFillSvg} from "@/assets/icons/qustion-fill.svg"
 export {default as TrackOrderSvg} from "@/assets/icons/track-order.svg"
+export {default as SelectFilter} from "@/assets/icons/select.svg"
+export {default as HeartMenuSvg} from "@/assets/icons/heart-menu.svg"
 
 // Image
 export {default as PhotoPizza} from "@/assets/image/photo_pizza.png"

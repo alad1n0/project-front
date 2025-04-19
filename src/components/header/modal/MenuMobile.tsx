@@ -61,6 +61,46 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ menuOpen, toggleMenu }) => {
         router.push('/profile');
     }
 
+    const handleLike = () => {
+        if (!isAuthenticated) {
+            toggleMenu();
+            setModalOpen(true);
+            return;
+        }
+
+        router.push("/profile?tab=saved");
+    }
+
+    const handleFaq = () => {
+        if (!isAuthenticated) {
+            toggleMenu();
+            setModalOpen(true);
+            return;
+        }
+
+        router.push("/profile?tab=faq");
+    }
+
+    const handleTrack = () => {
+        if (!isAuthenticated) {
+            toggleMenu();
+            setModalOpen(true);
+            return;
+        }
+
+        router.push("/profile?tab=track");
+    }
+
+    const handleOrder = () => {
+        if (!isAuthenticated) {
+            toggleMenu();
+            setModalOpen(true);
+            return;
+        }
+
+        router.push("/profile?tab=orders");
+    }
+
     const toggleModal = () => {
         toggleMenu();
         setModalOpen(!modalOpen);
@@ -92,7 +132,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ menuOpen, toggleMenu }) => {
                     <div className="box_top_content_mobile_menu">
                         <nav>
                             <ul className="list_menu_link_mobile">
-                                <li><button className="link_mobile_menu" onClick={() => {toggleMenu();router.push("/restaurant");}}>Заклади</button></li>
+                                <li><button className="link_mobile_menu" onClick={() => {toggleMenu(); router.push("/restaurant");}}>Заклади</button></li>
                                 <li><Link className="link_mobile_menu" href="#">Акції</Link></li>
                                 <li><Link className="link_mobile_menu" href="#">Про нас</Link></li>
                                 <li><Link className="link_mobile_menu" href="#">Доставка та оплата</Link></li>
@@ -111,34 +151,34 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ menuOpen, toggleMenu }) => {
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={toggleModal} type="button" className="link_custom_mobile_menu">
+                                    <button onClick={handleAuth} type="button" className="link_custom_mobile_menu">
                                         <ProfileSvg className="icon_custom_mobile_menu"/>
                                         <p className="text_custom_mobile_menu">Особисті дані</p>
                                     </button>
                                 </>
                             )}
-                            <Link href="" onClick={handleAuth} className="link_custom_mobile_menu">
+                            <button onClick={handleOrder} className="link_custom_mobile_menu">
                                 <OrderSvg className="icon_custom_mobile_menu"/>
                                 <p className="text_custom_mobile_menu">Мої замовлення</p>
-                            </Link>
-                            <Link href="" onClick={handleAuth} className="link_custom_mobile_menu">
+                            </button>
+                            <button onClick={handleLike} className="link_custom_mobile_menu">
                                 <HeartSvg className="icon_custom_mobile_menu"/>
                                 <p className="text_custom_mobile_menu">Улюблене</p>
-                            </Link>
+                            </button>
                             <button onClick={toggleCart} className="link_custom_mobile_menu">
                                 <BasketSvg className="icon_custom_mobile_menu"/>
                                 <p className="text_custom_mobile_menu">Кошик</p>
                             </button>
                             {isAuthenticated && (
                                 <>
-                                    <Link href="" className="link_custom_mobile_menu">
+                                    <button onClick={handleFaq} className="link_custom_mobile_menu">
                                         <QuestionsSvg className="icon_custom_mobile_menu"/>
                                         <p className="text_custom_mobile_menu">Часті запитання</p>
-                                    </Link>
-                                    <Link href="" className="link_custom_mobile_menu">
+                                    </button>
+                                    <button onClick={handleTrack} className="link_custom_mobile_menu">
                                         <TrackSvg className="icon_custom_mobile_menu"/>
                                         <p className="text_custom_mobile_menu">Відстежити замовлення</p>
-                                    </Link>
+                                    </button>
                                     <button className="link_custom_mobile_menu" onClick={handleLogout}>
                                         <LogoutSvg className="icon_custom_mobile_menu"/>
                                         <p className="text_custom_mobile_menu">Вийти</p>

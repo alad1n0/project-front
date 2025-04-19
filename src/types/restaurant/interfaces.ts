@@ -1,6 +1,9 @@
 export type GetRestaurantListParams = {
     page: number;
     limit: number;
+    categoryId: string | undefined;
+    isFreeDelivery: boolean | undefined;
+    sortByPopularity: boolean | undefined;
 };
 
 export interface Restaurant {

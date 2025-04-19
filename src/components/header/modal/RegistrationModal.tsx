@@ -7,6 +7,8 @@ import {useRouter} from "next/navigation";
 import {useAuth} from "@/provider/AuthProvider";
 import {signIn, signOut, useSession} from "next-auth/react";
 import {useQueryClient} from "@tanstack/react-query";
+import {useFinalizeOtpMutation} from "@/components/header/hooks/useFinalizeOtpMutation";
+import Modal from "@/components/ui/modal/Modal";
 
 interface RegisterModalProps {
     isOpen: boolean;
@@ -23,15 +25,17 @@ const RegistrationForm: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => 
     const [timer, setTimer] = useState(120);
     const [canResend, setCanResend] = useState(false);
     const [userInfoStep, setUserInfoStep] = useState(false);
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
     const [accessToken, setAccessToken] = useState("");
     const [refreshToken, setRefreshToken] = useState("");
-    const queryClient = useQueryClient()
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const queryClient = useQueryClient();
     const { data: session } = useSession();
+    const isSubmitDisabled = !firstName || !lastName;
 
     const { mutateAsync: sendOtp } = useSendOtpMutation();
     const { mutateAsync: verifyOtp } = useVerifyOtpMutation();
+    const { mutateAsync: finalizeOtp } = useFinalizeOtpMutation();
 
     useEffect(() => {
         if (isOpen) {
@@ -90,10 +94,18 @@ const RegistrationForm: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => 
         try {
             const response = await verifyOtp({ phone, code });
 
-            if (response?.data?.data.access_token && response?.data?.data.refresh_token) {
-                setAccessToken(response.data.data.access_token);
-                setRefreshToken(response.data.data.refresh_token);
-                setUserInfoStep(true);
+            if (response?.data?.data.tokens?.access_token && response?.data?.data?.tokens.refresh_token) {
+                setAccessToken(response.data.data.tokens.access_token);
+                setRefreshToken(response.data.data.tokens.refresh_token);
+
+                if (response.data.data.isNewUser) {
+                    setUserInfoStep(true);
+                } else {
+                    login(response.data.data.tokens.access_token, response.data.data.tokens.refresh_token);
+                    router.push("/profile");
+                    onClose();
+                    resetState();
+                }
             }
         } catch (error) {
             console.error("Помилка при верифікації OTP:", error);
@@ -101,9 +113,12 @@ const RegistrationForm: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => 
     };
 
     const handleUserInfoSubmit = async () => {
+        if (!firstName || !lastName) {
+            return;
+        }
+
         try {
-
-
+            finalizeOtp({ phone, firstName, lastName });
             login(accessToken, refreshToken);
             router.push("/profile");
             onClose();
@@ -147,112 +162,107 @@ const RegistrationForm: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => 
     }
 
     return (
-        <>
-            <div className={`mobile-menu-overlay ${isOpen ? "active" : ""}`} onClick={onClose}></div>
-            <div className="register-modal-container">
-                <div className="modal-container">
-                    <div className="modal-header">
-                        <h3>Вхід</h3>
-                        <button type="button" className="close_button" onClick={onClose}>
-                            <CloseSvg className="icon_close_modal" />
-                        </button>
-                    </div>
-
-                    {userInfoStep ? (
-                        <>
-                            <div className="modal-body">
-                                <h3>Як вас звати?</h3>
-                            </div>
-                            <div>
-                                <div className="form-group">
-                                    <label className="control-label">Ім’я</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Введіть ім’я"
-                                        value={firstName}
-                                        className="form-control"
-                                        onChange={(e) => setFirstName(e.target.value)}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="control-label">Прізвище</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Введіть прізвище"
-                                        value={lastName}
-                                        className="form-control"
-                                        onChange={(e) => setLastName(e.target.value)}
-                                    />
-                                </div>
-                                <button onClick={handleUserInfoSubmit} className="continue-button">Зареєструватись</button>
-                            </div>
-                        </>
-                    ) : phoneEntered ? (
-                        <>
-                            <div className="modal-body">
-                                <h3>Код підтвердження</h3>
-                                <p>На <strong>{phone}</strong> був <br/> надісланий код для підтвердження</p>
-                            </div>
-                            <div className="modal-footer">
-                                <OTPInputFields otp={otp} setOtp={setOtp} />
-                                <button onClick={handleOTPComplete} className="continue-button">Підтвердити</button>
-                                <div className="modal-end">
-                                    {timer > 0 ? (
-                                        <p>Відправити код повторно: <strong>через {formatTime(timer)} хв</strong></p>
-                                    ) : (
-                                        <p
-                                            onClick={handleResendCode}
-                                            style={{ cursor: "pointer", textDecoration: "underline" }}
-                                        >
-                                            <strong>Відправити код повторно</strong>
-                                        </p>
-                                    )}
-                                    <button
-                                        onClick={() => setPhoneEntered(false)}
-                                        className="back-button"
-                                    >
-                                        Назад
-                                    </button>
-                                </div>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div className="modal-body">
-                                <h3>Ласкаво просимо</h3>
-                                <p>Увійти по номеру телефону</p>
-                            </div>
-                            <div>
-                                <div className="form-group">
-                                    <label className="control-label">Мобільний телефон</label>
-                                    <input
-                                        type="text"
-                                        name="phone"
-                                        placeholder="+38 (063) 000-00-00"
-                                        className={`form-control ${error ? "error" : ""}`}
-                                        value={phone}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                    />
-                                </div>
-                                <button onClick={handlePhoneSubmit} className="continue-button">Продовжити</button>
-                            </div>
-                            <div className="decoration_line_horizontal"></div>
-                            <div className="social-login">
-                                <p>Увійти через соціальні мережі:</p>
-                                <div className="social-buttons">
-                                    <button className="social-btn" onClick={facebookAuth}>
-                                        <FacebookSvg className="social-btn-icon" />
-                                    </button>
-                                    <button className="social-btn" onClick={googleAuth}>
-                                        <GoogleSvg className="social-btn-icon" />
-                                    </button>
-                                </div>
-                            </div>
-                        </>
-                    )}
+            <Modal isOpen={isOpen} onClose={onClose}>
+                <div className="modal-header">
+                    <h3>Вхід</h3>
+                    <button type="button" className="close_button" onClick={onClose}>
+                        <CloseSvg className="icon_close_modal" />
+                    </button>
                 </div>
-            </div>
-        </>
+
+                {userInfoStep ? (
+                    <>
+                        <div className="modal-body">
+                            <h3>Як вас звати?</h3>
+                        </div>
+                        <div>
+                            <div className="form-group">
+                                <label className="control-label">Ім’я</label>
+                                <input
+                                    type="text"
+                                    placeholder="Введіть ім’я"
+                                    value={firstName}
+                                    className="form-control"
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="control-label">Прізвище</label>
+                                <input
+                                    type="text"
+                                    placeholder="Введіть прізвище"
+                                    value={lastName}
+                                    className="form-control"
+                                    onChange={(e) => setLastName(e.target.value)}
+                                />
+                            </div>
+                            <button onClick={handleUserInfoSubmit} disabled={isSubmitDisabled} className="continue-button">Зареєструватись</button>
+                        </div>
+                    </>
+                ) : phoneEntered ? (
+                    <>
+                        <div className="modal-body">
+                            <h3>Код підтвердження</h3>
+                            <p>На <strong>{phone}</strong> був <br/> надісланий код для підтвердження</p>
+                        </div>
+                        <div className="modal-footer">
+                            <OTPInputFields otp={otp} setOtp={setOtp} />
+                            <button onClick={handleOTPComplete} className="continue-button">Підтвердити</button>
+                            <div className="modal-end">
+                                {timer > 0 ? (
+                                    <p>Відправити код повторно: <strong>через {formatTime(timer)} хв</strong></p>
+                                ) : (
+                                    <p
+                                        onClick={handleResendCode}
+                                        style={{ cursor: "pointer", textDecoration: "underline" }}
+                                    >
+                                        <strong>Відправити код повторно</strong>
+                                    </p>
+                                )}
+                                <button
+                                    onClick={() => setPhoneEntered(false)}
+                                    className="back-button"
+                                >
+                                    Назад
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="modal-body">
+                            <h3>Ласкаво просимо</h3>
+                            <p>Увійти по номеру телефону</p>
+                        </div>
+                        <div>
+                            <div className="form-group">
+                                <label className="control-label">Мобільний телефон</label>
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    placeholder="+38 (063) 000-00-00"
+                                    className={`form-control ${error ? "error" : ""}`}
+                                    value={phone}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                />
+                            </div>
+                            <button onClick={handlePhoneSubmit} className="continue-button">Продовжити</button>
+                        </div>
+                        <div className="decoration_line_horizontal"></div>
+                        <div className="social-login">
+                            <p>Увійти через соціальні мережі:</p>
+                            <div className="social-buttons">
+                                <button className="social-btn" onClick={facebookAuth}>
+                                    <FacebookSvg className="social-btn-icon" />
+                                </button>
+                                <button className="social-btn" onClick={googleAuth}>
+                                    <GoogleSvg className="social-btn-icon" />
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </Modal>
     );
 };
 

@@ -19,7 +19,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ title, Icon, ArrowIcon, SelectedIco
                 {isSelected ? (
                     <SelectedIcon className={`profile_menu_icon ${isSelected ? "selected_icon_fill" : ""}`} />
                 ) : (
-                    <Icon className={`profile_menu_icon ${isSelected ? "selected_icon" : ""}`} />
+                    <Icon className={`profile_menu_icon  ${isSelected ? "selected_icon" : ""}`} />
                 )}
                 <p className={isSelected ? "selected_text" : ""}>{title}</p>
             </div>

@@ -546,7 +546,7 @@
         gap: 8px;
         padding: 10px 14px;
         border-radius: 24px;
-        border: 2px solid #DD302C;
+        border: 2px solid var(--color-red);
         background: var(--color-red) ;
     }
 
@@ -1450,6 +1450,7 @@
 .main-content-container {
     flex-grow: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding-top: 11rem;
@@ -1685,6 +1686,13 @@
     width: 100%;
 }
 
+.category_icon_svg {
+    height: 40px;
+    width: 40px;
+    /*filter: invert(48%) sepia(94%) saturate(694%) hue-rotate(1deg) brightness(101%) contrast(97%);*/
+    filter: invert(35%) sepia(83%) saturate(3356%) hue-rotate(-5deg) brightness(97%) contrast(106%);
+}
+
 .popular_categories_title {
     display: flex;
     flex-direction: row;
@@ -1712,13 +1720,12 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    width: 200px;
-    height: 100px;
     background: #FFF;
     box-shadow: 0 1px 4px 1px rgba(114, 138, 155, 0.25);
     border-radius: 24px;
     align-items: center;
     justify-content: center;
+    text-align: center;
     transition: all ease-in-out 100ms;
 }
 
@@ -1730,7 +1737,7 @@
 .popular_categories_block p {
     font-weight: 700;
     font-family: var(--font-family-main), serif;
-    font-size: 18px;
+    font-size: 16px;
 }
 
 @media screen and (max-width: 725px) {
@@ -1747,13 +1754,13 @@
     }
 
     .popular_categories_block {
-        gap: 5px;
-        width: 150px;
-        height: 80px;
+        max-width: 150px;
+        width: 100%;
+        height: 110px;
     }
 
     .popular_categories_block p {
-        font-size: 14px;
+        font-size: 12px;
     }
 }
 
@@ -1774,7 +1781,13 @@
     }
 
     .popular_categories_block {
+        max-width: 200px;
+        width: 100%;
         height: 90px;
+    }
+
+    .popular_categories_block p {
+        font-size: 16px;
     }
 }
 
@@ -1784,8 +1797,9 @@
     }
 
     .popular_categories_block {
-        width: 200px;
-        height: 100px;
+        max-width: 220px;
+        width: 100%;
+        height: 110px;
     }
 }
 
@@ -2410,6 +2424,12 @@
 
 /** ================ RESTORATION ================ **/
 
+.box_top_restaurant_manufacturer_page {
+    max-width: 1440px;
+    width: 100%;
+    padding: 20px;
+}
+
 .box_top_restaurant_title {
     display: flex;
     flex-direction: row;
@@ -2468,7 +2488,6 @@
 
 .restaurant_manufacturer_page {
     max-width: 1420px;
-    padding: 20px;
 }
 
 .icon_top_restaurant_page{
@@ -2587,13 +2606,13 @@
     color: var(--color-red);
 }
 
-.item_option_select.active::after {
-    content: '';
-    display: block;
-    background-size: 100% 100%;
-    width: 24px;
-    height: 24px;
-    background-image: url(../../assets/icons/select.svg);
+.icon_select_filter {
+    fill: var(--color-red);
+    width: 20px;
+    height: 20px;
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .container_select {
@@ -3337,6 +3356,8 @@
 
 .box_name_btn_information{
     display: flex;
+    justify-content: center;
+    text-align: center;
     align-items: center;
     gap: 10px;
 }
@@ -3416,13 +3437,16 @@
     margin: 5px;
     border-radius: 16px;
     border: 2px solid #FFF;
+    background: #FFFFFF;
     box-shadow: 0 1px 4px 0 rgba(114, 138, 155, 0.25);
 }
 
 .container_photo_name_phone {
     display: flex;
+    padding-top: 10px;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
 }
 
 .icon_close_restaurant_page{
@@ -3591,6 +3615,7 @@
     }
 
     .container_photo_name_phone{
+        padding-top: 10px;
         flex-direction: row;
         gap: 20px;
     }
@@ -3602,7 +3627,7 @@
 
 /** ================ MODAL LOGIN ================ **/
 
-.register-modal-container {
+.modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -3627,11 +3652,12 @@
     font-family: var(--font-family-main), serif;
 }
 
-@media screen and (max-width: 553px) {
+@media screen and (max-width: 440px) {
     .modal-container {
-        max-width: 100%;
+        width: 100%;
         height: 100%;
         border-radius: 0;
+        overflow: hidden;
     }
 }
 
@@ -3683,7 +3709,7 @@
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 14px;
 }
 
 .control-label {
@@ -3701,7 +3727,6 @@
     font-size: 16px;
     background-color: #FFFFFF;
     font-family: var(--font-family-main), serif;
-    border: 1px solid #ccc;
     border-radius: 24px;
 }
 
@@ -3936,6 +3961,7 @@
     flex-direction: row;
     gap: 10px;
     align-items: center;
+    overflow: visible !important;
 }
 
 .menu_container p {
@@ -4224,4 +4250,12 @@
     flex-direction: column;
     gap: 20px;
     align-items: center;
+}
+
+.icon_profile_edit {
+    opacity: 50%;
+}
+
+.icon_profile_edit:hover {
+    opacity: 100%;
 }

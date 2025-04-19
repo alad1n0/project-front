@@ -1,52 +1,67 @@
 "use client"
 
-import {useGetRestaurantList} from "@/screens/main/hooks/useGetRestaurantList";
+import {useGetRestaurantList} from "@/screens/main/hooks/restaurant/useGetRestaurantList";
 import RegistrationModal from "@/components/header/modal/RegistrationModal";
-import {useActionsFavorite} from "@/screens/main/hooks/useActionsFavorite";
+import {useActionsFavorite} from "@/screens/main/hooks/favorite/useActionsFavorite";
 import RestaurantList from "@/components/main/restaurant/RestaurantList";
 import type { Restaurant } from "@/types/restaurant/interfaces";
 import React, {useEffect, useState} from "react";
 import {useAuth} from "@/provider/AuthProvider";
-import {ArrowSvg, BackArrowSvg} from "@/assets";
+import {BackArrowSvg} from "@/assets";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
+import {useGetRestaurantCategory} from "@/screens/main/hooks/restaurant-category/useGetRestaurantCategory";
+import SortSelect from "@/components/ui/select/SortSelect";
+import FoodSelect from "@/components/ui/select/FoodSelect";
 
 export default function Restaurant() {
     const [isFoodOpen, setIsFoodOpen] = useState(false);
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedFood, setSelectedFood] = useState("Тип їжі");
+    const [selectedFood, setSelectedFood] = useState("Тип закладу");
     const [selectedSort, setSelectedSort] = useState("Сортувати за");
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const router = useRouter();
     const { isAuthenticated } = useAuth();
 
-    const foodOptions = ["Всі", "Суші", "Бургери", "Піца", "Шаурма"];
-    const sortOptions = ["За популярністю", "Поруч зі мною", "Безкоштовна доставка"];
+    const sortOptions = ["За популярністю", "Безкоштовна доставка"];
 
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
 
-    const { data } = useGetRestaurantList({ page, limit: 8 });
+    const { data: foodOptionsData } = useGetRestaurantCategory();
+    const foodOptions = [{ id: null, name: "Всі" }, ...(foodOptionsData?.data?.data ?? [])];
+    const selectedCategoryId = foodOptions.find((item) => item.name === selectedFood)?.id ?? null;
+
+    const { data } = useGetRestaurantList({
+        page,
+        limit: 8,
+        categoryId: selectedFood !== "Тип закладу" && selectedFood !== "Всі" ? selectedCategoryId : undefined,
+        isFreeDelivery: selectedSort === "Безкоштовна доставка" ? true : undefined,
+        sortByPopularity: selectedSort === "За популярністю" ? true : undefined,
+    });
+
     const { mutate: toggleFavorite } = useActionsFavorite();
+
+    useEffect(() => {
+        setPage(1);
+        setRestaurants([]);
+    }, [selectedFood, selectedSort]);
 
     useEffect(() => {
         if (data?.data?.data?.restaurants) {
             const newRestaurants = data.data.data.restaurants;
 
-            setRestaurants((prev) => {
-                const uniqueNewRestaurants = newRestaurants.filter((newRestaurant: Restaurant) =>
-                    !prev.some((existingRestaurant) => existingRestaurant.id === newRestaurant.id)
-                );
-                return [...prev, ...uniqueNewRestaurants];
-            });
+            setRestaurants(newRestaurants);
 
-            setHasMore(newRestaurants.length === 8);
+            setHasMore(data.data.data.meta.currentPage < data.data.data.meta.totalPages);
         }
     }, [data]);
 
     const loadMoreRestaurants = () => {
-        setPage((prev) => prev + 1);
+        if (hasMore) {
+            setPage((prev) => prev + 1);
+        }
     };
 
     const toggleDropdown = (type: "food" | "sort") => {
@@ -88,8 +103,15 @@ export default function Restaurant() {
     };
 
     const handleSelect = (option: string, type: "food" | "sort") => {
-        if (type === "food") setSelectedFood(option);
-        else setSelectedSort(option);
+        if (type === "food") {
+            if (option === "Всі") {
+                setSelectedFood("Всі");
+            } else {
+                setSelectedFood((prev) => (prev === option ? "Всі" : option));
+            }
+        } else {
+            setSelectedSort((prev) => (prev === option ? "Сортувати за" : option));
+        }
 
         setIsFoodOpen(false);
         setIsSortOpen(false);
@@ -97,7 +119,7 @@ export default function Restaurant() {
 
     return (
         <>
-            <div className="restaurant_manufacturer_page">
+            <div className="box_top_restaurant_manufacturer_page">
                 <div className="box_top_restaurant_title">
                     <Link href="/" type="button" className="links_top_restaurant_page">
                         <BackArrowSvg className="icon_top_restaurant_page" />
@@ -107,50 +129,25 @@ export default function Restaurant() {
 
                 <div className="box_top_section_restaurant_manufacturer_page">
                     <div className="container_select">
-                        <div className="box_select">
-                            <div
-                                className={`box_top_select ${isFoodOpen ? "open" : ""}`}
-                                onClick={() => toggleDropdown("food")}
-                            >
-                                <p className="text_selected">{selectedFood}</p>
-                                <ArrowSvg className="icon_arrow_select" />
-                            </div>
-                            <ul className={`dropdown_list ${isFoodOpen ? "open" : ""}`}>
-                                {foodOptions.map((option) => (
-                                    <li
-                                        key={option}
-                                        className={`item_option_select ${selectedFood === option ? "active" : ""}`}
-                                        onClick={() => handleSelect(option, "food")}
-                                    >
-                                        {option}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                        <FoodSelect
+                            selectedFood={selectedFood}
+                            isOpen={isFoodOpen}
+                            toggleDropdown={() => toggleDropdown("food")}
+                            options={foodOptions}
+                            onSelect={(option) => handleSelect(option, "food")}
+                        />
 
-                        <div className="box_select">
-                            <div
-                                className={`box_top_select ${isSortOpen ? "open" : ""}`}
-                                onClick={() => toggleDropdown("sort")}
-                            >
-                                <p className="text_selected">{selectedSort}</p>
-                                <ArrowSvg className="icon_arrow_select" />
-                            </div>
-                            <ul className={`dropdown_list ${isSortOpen ? "open" : ""}`}>
-                                {sortOptions.map((option) => (
-                                    <li
-                                        key={option}
-                                        className={`item_option_select ${selectedSort === option ? "active" : ""}`}
-                                        onClick={() => handleSelect(option, "sort")}
-                                    >
-                                        {option}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                        <SortSelect
+                            selectedSort={selectedSort}
+                            isOpen={isSortOpen}
+                            toggleDropdown={() => toggleDropdown("sort")}
+                            options={sortOptions}
+                            onSelect={(option) => handleSelect(option, "sort")}
+                        />
                     </div>
                 </div>
-
+            </div>
+            <div className="restaurant_manufacturer_page">
                 <div className="container_custom section_restaurant">
                     <div className="container_cards_restaurant">
                         <RestaurantList

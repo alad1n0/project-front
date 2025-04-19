@@ -11,6 +11,8 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, toggleFavo
         <>
             {restaurants.map((restaurant) => {
                 const isSelected = restaurant.isFavorite;
+                const deliveryPrice = parseFloat(restaurant.deliveryPrice);
+                const deliveryText = deliveryPrice === 0 ? "Безкоштовно" : `${deliveryPrice} грн.`;
 
                 return (
                     <div key={restaurant.id} className="link_item_card_restaurant">
@@ -41,7 +43,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, toggleFavo
                             <div className="box_delivery_time_card_restaurant">
                                 <div className="box_icon_delivery">
                                     <DeliverySvg className="icon_delivery_card_restaurant"/>
-                                    <p className="text_delivery_card_restaurant">{restaurant.deliveryPrice} грн.</p>
+                                    <p className="text_delivery_card_restaurant">{deliveryText}</p>
                                 </div>
                                 <p className="time_delivery_card_restaurant">{restaurant.cookingTime} хв.</p>
                             </div>

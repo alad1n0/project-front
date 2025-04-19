@@ -1,6 +1,12 @@
 import instance from "@/services/api/interceptors.api";
-import { postAdminLogin, postAuthOauth, postAuthOtp, postAuthVerifyOtp } from "@/config/api/api.config";
-import { OtpRequest, VerifyOtpRequest, LoginAdminRequest, OauthRequest } from "@/types/auth/interfaces";
+import {postAdminLogin, postAuthOauth, postAuthOtp, postAuthVerifyOtp, postFinalizeOtp} from "@/config/api/api.config";
+import {
+    OtpRequest,
+    VerifyOtpRequest,
+    LoginAdminRequest,
+    OauthRequest,
+    FinalizeOtpRequest
+} from "@/types/auth/interfaces";
 
 export const AuthService = {
     otp: (data: OtpRequest) => instance({
@@ -15,6 +21,11 @@ export const AuthService = {
     }),
     oauth: (data: OauthRequest) => instance({
         url: postAuthOauth(),
+        method: 'POST',
+        data: data,
+    }),
+    finalizeOtp: (data: FinalizeOtpRequest) => instance({
+        url: postFinalizeOtp(),
         method: 'POST',
         data: data,
     }),

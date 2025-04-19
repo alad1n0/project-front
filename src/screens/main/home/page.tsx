@@ -14,21 +14,25 @@ import {
 import {popularCategories} from "@/lib/main/popularCategories";
 import ProductList from "@/components/main/product/ProductList";
 import RestaurantList from "@/components/main/restaurant/RestaurantList";
-import {useGetTopRestaurant} from "@/screens/main/hooks/useGetTopRestaurant";
-import {useActionsFavorite} from "@/screens/main/hooks/useActionsFavorite";
+import {useGetTopRestaurant} from "@/screens/main/hooks/restaurant/useGetTopRestaurant";
+import {useActionsFavorite} from "@/screens/main/hooks/favorite/useActionsFavorite";
 import RegistrationModal from "@/components/header/modal/RegistrationModal";
 import {useAuth} from "@/provider/AuthProvider";
 import {useRouter} from "next/navigation";
 import {Restaurant} from "@/types/restaurant/interfaces";
+import {useGetTopRestaurantCategory} from "@/screens/main/hooks/restaurant-category/useGetTopRestaurantCategory";
+import {RestaurantCategory} from "@/types/restaurant-category/interface";
 
 const products = [
     { id: 1, name: "Вершковий з креветкою", weight: 250, price: 178, image: FilaProduct, description: "Рис, норі, крем-сир, креветка" },
 ];
+
 const categories = ["Суші", "Сети", "Піца", "Напої", "Фрі меню"];
 
 const Home: React.FC = () => {
     const [selectedProducts, setSelectedProducts] = useState<Record<number, boolean>>({});
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+    const [restaurantCategory, setRestaurantCategory] = useState<RestaurantCategory[]>([]);
     const [activeTab, setActiveTab] = useState(categories[0]);
     const [isFoodOpen, setIsFoodOpen] = useState(false);
     const [selectedFood, setSelectedFood] = useState("За популярністю");
@@ -44,12 +48,19 @@ const Home: React.FC = () => {
 
     const { data } = useGetTopRestaurant();
     const { mutate: toggleFavorite } = useActionsFavorite();
+    const { data: topRestaurantCategory } = useGetTopRestaurantCategory();
 
     useEffect(() => {
         if (data?.data?.data) {
             setRestaurants(data.data.data);
         }
     }, [data]);
+
+    useEffect(() => {
+        if (topRestaurantCategory?.data?.data) {
+            setRestaurantCategory(topRestaurantCategory.data.data);
+        }
+    }, [topRestaurantCategory]);
 
     useLayoutEffect(() => {
         const listRefCurrent = listRef.current;
@@ -154,9 +165,10 @@ const Home: React.FC = () => {
                         </Link>
                     </div>
                     <div className="popular_categories_container">
-                        {popularCategories.map((category, index) => (
+                        {restaurantCategory.map((category, index) => (
                             <div key={index} className="popular_categories_block">
-                                <category.icon/>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={category.imageUrl} alt={category.name} className="category_icon_svg" />
                                 <p>{category.name}</p>
                             </div>
                         ))}
@@ -166,7 +178,7 @@ const Home: React.FC = () => {
                 <div className="restaurant_title_container">
                     <div className="box_top_section_restaurant">
                         <h2>Заклади, які вам можуть сподобатись</h2>
-                        <Link className="view_all_button_link" href="#">
+                        <Link className="view_all_button_link" href={"/restaurants"}>
                             <p className="view_all_button_text">Показати все</p>
                             <ArrowSvg className="icon_arrow_view_all"/>
                         </Link>

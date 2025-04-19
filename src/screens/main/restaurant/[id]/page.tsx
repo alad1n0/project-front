@@ -12,7 +12,7 @@ import {
 } from "@/assets";
 import { useParams } from "next/navigation";
 import {OneRestaurant} from "@/types/restaurant/interfaces";
-import {useGetRestaurant} from "@/screens/main/hooks/useGetRestaurant";
+import {useGetRestaurant} from "@/screens/main/hooks/restaurant/useGetRestaurant";
 import Link from "next/link";
 
 export default function RestaurantDetails() {

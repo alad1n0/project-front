@@ -7,6 +7,12 @@ export interface VerifyOtpRequest {
     code: string;
 }
 
+export interface FinalizeOtpRequest {
+    phone: string;
+    firstName: string;
+    lastName: string;
+}
+
 export interface LoginAdminRequest {
     email: string;
     password: string;
