@@ -49,8 +49,8 @@ const Home: React.FC = () => {
     const { data } = useGetTopRestaurant();
     const { mutate: toggleFavorite } = useActionsFavorite();
     const { data: topRestaurantCategory } = useGetTopRestaurantCategory();
-    const { data: productCategory } = useProductRestaurantCategory("13caca79-a61f-44f8-ba97-c52e11cef861")
-    const { data: productList, refetch } = useGetProductRestaurantList("13caca79-a61f-44f8-ba97-c52e11cef861", productParams);
+    const { data: productCategory } = useProductRestaurantCategory("6619cc60-485b-4258-8be9-3a254f55e94f")
+    const { data: productList, refetch } = useGetProductRestaurantList("6619cc60-485b-4258-8be9-3a254f55e94f", productParams);
 
     useEffect(() => {
         const categories: CategoryProduct[] = productCategory?.data?.data || [];
