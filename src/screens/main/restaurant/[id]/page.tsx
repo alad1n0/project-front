@@ -15,7 +15,7 @@ import {OneRestaurant} from "@/types/restaurant/interfaces";
 import {useGetRestaurant} from "@/screens/main/hooks/restaurant/useGetRestaurant";
 import Link from "next/link";
 import {useProductRestaurantCategory} from "@/screens/main/hooks/product/useProductRestaurantCategory";
-import {CategoryProduct, ProductParams} from "@/types/product/interface";
+import {CategoryProduct, OneProduct} from "@/types/product/interface";
 import SubcategoryTabs from "@/components/ui/tabs/Tabs";
 import ProductList from "@/components/main/product/ProductList";
 import {useAuth} from "@/provider/AuthProvider";
@@ -30,7 +30,7 @@ export default function RestaurantDetails() {
     const [categoryFilters, setCategoryFilters] = useState<Record<string, string | null>>({});
     const [selectedProducts, setSelectedProducts] = useState<Record<string, boolean>>({});
     const [restaurant, setRestaurant] = useState<OneRestaurant | null>(null);
-    const [productsByCategory, setProductsByCategory] = useState<Record<string, any[]>>({});
+    const [productsByCategory, setProductsByCategory] = useState<Record<string, OneProduct[]>>({});
     const [isUserClickedTab, setIsUserClickedTab] = useState(false);
 
     const { id } = useParams();
@@ -46,7 +46,7 @@ export default function RestaurantDetails() {
         const fetchProducts = async () => {
             if (!productCategory?.data?.data) return;
 
-            const newProductsByCategory: Record<string, any[]> = {};
+            const newProductsByCategory: Record<string, OneProduct[]> = {};
 
             await Promise.all(
                 productCategory.data.data.map(async (category: CategoryProduct) => {
@@ -68,14 +68,12 @@ export default function RestaurantDetails() {
     }, [productCategory, categoryFilters, id]);
 
     useEffect(() => {
-        // Налаштування спостерігача
         const observerOptions = {
-            root: null,  // Спостерігаємо за елементами на сторінці
-            rootMargin: "0px 0px -70% 0px", // Зсуваємо нижній відступ, щоб спостерігач спрацьовував, коли елемент буде майже в видимій області
-            threshold: 0.1,  // Мінімум 10% елемента має бути видно для активації
+            root: null,
+            rootMargin: "0px 0px -70% 0px",
+            threshold: 0.1,
         };
 
-        // Функція для обробки видимості категорій
         const observerCallback = (entries: IntersectionObserverEntry[]) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -88,19 +86,16 @@ export default function RestaurantDetails() {
             });
         };
 
-        // Створюємо спостерігача
         const observer = new IntersectionObserver(observerCallback, observerOptions);
 
-        // Спостерігаємо за усіма категоріями
         Object.entries(categoryRefs.current).forEach(([name, ref]) => {
             const titleEl = ref?.querySelector('.category_title');
             if (titleEl) {
                 titleEl.setAttribute('data-category-name', name);
-                observer.observe(titleEl);  // Починаємо спостереження
+                observer.observe(titleEl);
             }
         });
 
-        // Очищаємо спостерігача, коли компонент буде знищений
         return () => {
             observer.disconnect();
         };
@@ -128,7 +123,7 @@ export default function RestaurantDetails() {
         }
 
         setIsUserClickedTab(false);
-    }, [activeTab]);
+    }, [activeTab, isUserClickedTab]);
 
     useLayoutEffect(() => {
         const listRefCurrent = listRef.current;
@@ -185,11 +180,13 @@ export default function RestaurantDetails() {
                                 <SendSvg className="icon_top_restaurant_page" />
                             </button>
                             <div className="box_img_top_restaurant_page">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img className="img_top_restaurant_page" src={restaurant?.banner} alt={restaurant?.name}/>
                             </div>
                         </div>
                         <div className="container_info_search_restaurant_page">
                             <div className="container_photo_name_phone">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img className="logo_restaurant_page" src={restaurant?.logo} alt={restaurant?.name}/>
                                 <div className="box_text_name_phone">
                                     <div className="box_name_btn_information">
