@@ -5,7 +5,7 @@ export const postAuthOtp = () => '/auth/otp'
 export const postAuthVerifyOtp = () => '/auth/otp-verify'
 export const postAuthOauth = () => `/auth/oauth`
 export const postFinalizeOtp = () => `/auth/otp-finalize`
-export const postAdminLogin = () => '/auth/admin-login';
+export const postAdminLogin = () => '/auth/admin-login'
 
 export const getRestaurantList = () => `/restaurants/get-restaurants`
 export const getTopRestaurants = () => `/restaurants/get-top-restaurants`
@@ -21,3 +21,6 @@ export const updateUserAddress = () => `/users/update-user-address`
 
 export const getCategoryRestaurant = () => `/categories/get-all`
 export const getTopCategoryRestaurant = () => `/categories/get-top`
+
+export const getProductRestaurantCategory = (id: string) => `/products/get-product-restaurants-category/${id}`
+export const getProductRestaurant = (id: string) => `/products/get-product-restaurants/${id}`

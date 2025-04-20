@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Image, { StaticImageData } from "next/image";
 import {cn} from "@/helpers/cn";
 import {CardSvg, HeartDislikeSvg, HeartLikeSvg, MinesSvg, PlusSvg} from "@/assets";
 import Link from "next/link";
@@ -7,7 +6,7 @@ import Link from "next/link";
 interface ProductList {
     id: number;
     name: string;
-    image: StaticImageData;
+    image: string;
     weight: number;
     description: string;
     price: number;
@@ -20,37 +19,44 @@ interface ProductListProps {
 }
 
 const ProductList: React.FC<ProductListProps> = ({ products, selectedProduct, toggleFavorite }) => {
-    const [count, setCount] = useState(0);
-    const [isAdded, setIsAdded] = useState(false);
+    const [cart, setCart] = useState<Record<number, number>>({});
 
-    const addProduct = () => {
-        if (isAdded) {
-            setCount(count + 1);
-        } else {
-            setIsAdded(true);
-            setCount(1);
-        }
+    const addProduct = (id: number) => {
+        setCart(prev => ({
+            ...prev,
+            [id]: (prev[id] || 0) + 1
+        }));
     };
 
-    const removeProduct = () => {
-        if (count > 1) {
-            setCount(count - 1);
-        } else {
-            setIsAdded(false);
-            setCount(0);
-        }
+    const removeProduct = (id: number) => {
+        setCart(prev => {
+            const newCount = (prev[id] || 0) - 1;
+            if (newCount <= 0) {
+                const newCart = { ...prev };
+                delete newCart[id];
+                return newCart;
+            }
+            return {
+                ...prev,
+                [id]: newCount
+            };
+        });
     };
 
-    const deleteProduct = () => {
-        setIsAdded(false);
-        setCount(0);
+    const deleteProduct = (id: number) => {
+        setCart(prev => {
+            const newCart = { ...prev };
+            delete newCart[id];
+            return newCart;
+        });
     };
 
     return (
         <>
             {products.map((product) => {
-
                 const isSelected = selectedProduct[product.id] || false;
+                const count = cart[product.id] || 0;
+                const isAdded = count > 0;
 
                 return (
                     <div key={product.id} className={cn("box_item_product", { added: isAdded, more_one: count > 1 })}>
@@ -65,7 +71,8 @@ const ProductList: React.FC<ProductListProps> = ({ products, selectedProduct, to
                                 {isSelected ? <HeartLikeSvg className="btn_add_wishlist_svg" /> : <HeartDislikeSvg className="btn_add_wishlist_svg" />}
                             </button>
                             <Link className="link_image_product" href="#">
-                                <Image className="image_item_product" src={product.image} alt={product.name} />
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img className="image_item_product" src={product.image} alt={product.name} />
                             </Link>
                         </div>
 
@@ -80,14 +87,14 @@ const ProductList: React.FC<ProductListProps> = ({ products, selectedProduct, to
                                 <div className="box_price_product"><p className="price_product">{product.price} грн</p></div>
 
                                 <div className="box_add_product_calc">
-                                    <button type="button" className="btn_delete_product_calc" onClick={deleteProduct}>
+                                    <button type="button" className="btn_delete_product_calc" onClick={() => deleteProduct(product.id)}>
                                         <CardSvg className="icon_delete_product_calc"/>
                                     </button>
 
                                     <button
                                         type="button"
                                         className="btn_minus_product_calc"
-                                        onClick={removeProduct}
+                                        onClick={() => removeProduct(product.id)}
                                         disabled={count === 0}
                                     >
                                         <MinesSvg className="icon_minus_product_calc"/>
@@ -95,7 +102,7 @@ const ProductList: React.FC<ProductListProps> = ({ products, selectedProduct, to
 
                                     <p className="count_product_calc">{count}</p>
 
-                                    <button type="button" className="btn_add_product_calc" onClick={addProduct}>
+                                    <button type="button" className="btn_add_product_calc" onClick={() => addProduct(product.id)}>
                                         <PlusSvg className="icon_add_product_calc" />
                                     </button>
                                 </div>

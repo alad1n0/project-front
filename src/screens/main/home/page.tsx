@@ -6,12 +6,10 @@ import Image from "next/image";
 import {
     ArrowSvg,
     ColumSvg,
-    FilaProduct,
     MainImage,
     RowSvg,
     SearchSvg,
 } from "@/assets";
-import {popularCategories} from "@/lib/main/popularCategories";
 import ProductList from "@/components/main/product/ProductList";
 import RestaurantList from "@/components/main/restaurant/RestaurantList";
 import {useGetTopRestaurant} from "@/screens/main/hooks/restaurant/useGetTopRestaurant";
@@ -22,33 +20,59 @@ import {useRouter} from "next/navigation";
 import {Restaurant} from "@/types/restaurant/interfaces";
 import {useGetTopRestaurantCategory} from "@/screens/main/hooks/restaurant-category/useGetTopRestaurantCategory";
 import {RestaurantCategory} from "@/types/restaurant-category/interface";
-
-const products = [
-    { id: 1, name: "Вершковий з креветкою", weight: 250, price: 178, image: FilaProduct, description: "Рис, норі, крем-сир, креветка" },
-];
-
-const categories = ["Суші", "Сети", "Піца", "Напої", "Фрі меню"];
+import {useProductRestaurantCategory} from "@/screens/main/hooks/product/useProductRestaurantCategory";
+import {CategoryProduct, ProductParams} from "@/types/product/interface";
+import {useGetProductRestaurantList} from "@/screens/main/hooks/product/useGetProductRestaurantList";
+import SubcategoryTabs from "@/components/ui/tabs/Tabs";
 
 const Home: React.FC = () => {
     const [selectedProducts, setSelectedProducts] = useState<Record<number, boolean>>({});
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [restaurantCategory, setRestaurantCategory] = useState<RestaurantCategory[]>([]);
-    const [activeTab, setActiveTab] = useState(categories[0]);
     const [isFoodOpen, setIsFoodOpen] = useState(false);
     const [selectedFood, setSelectedFood] = useState("За популярністю");
     const [layout, setLayout] = useState("rows");
     const [modalOpen, setModalOpen] = useState(false);
     const [showLeftArrow, setShowLeftArrow] = useState(false);
     const [showRightArrow, setShowRightArrow] = useState(false);
+    const [activeTab, setActiveTab] = useState("");
     const listRef = useRef<HTMLUListElement | null>(null);
     const { isAuthenticated } = useAuth();
     const router = useRouter();
+    const [productParams, setProductParams] = useState<ProductParams>({
+        categoryId: null,
+        subcategoryId: null,
+    });
 
     const foodOptions = ["Від дешевших до дорогих", "Від дорогих до дешевших", "За популярністю"];
 
     const { data } = useGetTopRestaurant();
     const { mutate: toggleFavorite } = useActionsFavorite();
     const { data: topRestaurantCategory } = useGetTopRestaurantCategory();
+    const { data: productCategory } = useProductRestaurantCategory("e83ac882-d1f3-484e-8607-2ab5639088e8")
+    const { data: productList, refetch } = useGetProductRestaurantList("e83ac882-d1f3-484e-8607-2ab5639088e8", productParams);
+
+    useEffect(() => {
+        const categories: CategoryProduct[] = productCategory?.data?.data || [];
+        const selectedCategory = categories.find(cat => cat.name === activeTab);
+
+        if (selectedCategory) {
+            console.log()
+            setProductParams({ categoryId: selectedCategory.id, subcategoryId: null });
+        }
+    }, [activeTab, productCategory]);
+
+    useEffect(() => {
+        if (productParams.categoryId || productParams.subcategoryId) {
+            refetch();
+        }
+    }, [productParams, refetch]);
+
+    useEffect(() => {
+        if (productCategory?.data?.data?.length > 0) {
+            setActiveTab(productCategory?.data.data[0].name);
+        }
+    }, [productCategory]);
 
     useEffect(() => {
         if (data?.data?.data) {
@@ -199,13 +223,13 @@ const Home: React.FC = () => {
 
                     <div className="list_tabs_wrapper" style={{ position: 'relative' }}>
                         <ul className={`list_tabs_foods ${showLeftArrow || showRightArrow ? "scrollable" : ""}`} ref={listRef}>
-                            {categories.map((category) => (
+                            {productCategory?.data?.data.map((category: CategoryProduct) => (
                                 <li
-                                    key={category}
-                                    className={`item_tabs_food ${activeTab === category ? "active" : ""}`}
-                                    onClick={() => setActiveTab(category)}
+                                    key={category.id}
+                                    className={`item_tabs_food ${activeTab === category.name ? "active" : ""}`}
+                                    onClick={() => setActiveTab(category.name)}
                                 >
-                                    <a>{category}</a>
+                                    <a>{category.name}</a>
                                 </li>
                             ))}
                         </ul>
@@ -230,6 +254,12 @@ const Home: React.FC = () => {
                     </div>
 
                     <div className="container_filter">
+                        <SubcategoryTabs
+                            subcategories={productCategory?.data?.data.find((cat: CategoryProduct) => cat.name === activeTab)?.subcategories || []}
+                            activeTab={productParams.subcategoryId}
+                            onTabChange={(id) => setProductParams({ ...productParams, subcategoryId: id || null })}
+                        />
+
                         <div className="box_top_filter">
                             <div className="box_select">
                                 <div
@@ -271,7 +301,11 @@ const Home: React.FC = () => {
                     </div>
 
                     <div className={`container_products ${layout}`}>
-                        <ProductList products={products} selectedProduct={selectedProducts} toggleFavorite={toggleFavoriteProduct}/>
+                        <ProductList
+                            products={productList?.data?.data || []}
+                            selectedProduct={selectedProducts}
+                            toggleFavorite={toggleFavoriteProduct}
+                        />
                     </div>
 
                     <a href="#" className="link_more_products">Показати ще</a>
