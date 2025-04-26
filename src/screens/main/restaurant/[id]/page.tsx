@@ -1,26 +1,21 @@
 "use client"
 
-import React, {useEffect, useLayoutEffect, useRef, useState} from "react";
-import {
-    ArrowSvg,
-    BackArrowSvg,
-    ClockSvg,
-    DeliverySvg,
-    SendSvg,
-    StarsSvg,
-    TelePhoneSvg
-} from "@/assets";
-import {useParams, useRouter} from "next/navigation";
-import {OneRestaurant} from "@/types/restaurant/interfaces";
-import {useGetRestaurant} from "@/screens/main/hooks/restaurant/useGetRestaurant";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ArrowSvg, BackArrowSvg, ClockSvg, DeliverySvg, SendSvg, StarsSvg, TelePhoneSvg } from "@/assets";
+import { useParams, useRouter } from "next/navigation";
+import { OneRestaurant } from "@/types/restaurant/interfaces";
+import { useGetRestaurant } from "@/screens/main/hooks/restaurant/useGetRestaurant";
 import Link from "next/link";
-import {useProductRestaurantCategory} from "@/screens/main/hooks/product/useProductRestaurantCategory";
-import {CategoryProduct, OneProduct} from "@/types/product/interface";
+import { useProductRestaurantCategory } from "@/screens/main/hooks/product/useProductRestaurantCategory";
+import { CategoryProduct, OneProduct } from "@/types/product/interface";
 import SubcategoryTabs from "@/components/ui/tabs/Tabs";
 import ProductList from "@/components/main/product/ProductList";
-import {useAuth} from "@/provider/AuthProvider";
+import { useAuth } from "@/provider/AuthProvider";
 import RegistrationModal from "@/components/header/modal/RegistrationModal";
-import {ProductService} from "@/services/product/product.service";
+import { ProductService } from "@/services/product/product.service";
+import { useActionsFavorite } from "@/screens/main/hooks/favorite/useActionsFavorite";
+import {useBasket} from "@/provider/BasketProvider";
+import SizeTabs from "@/components/ui/tabs/SizeTabs";
 
 export default function RestaurantDetails() {
     const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -28,7 +23,6 @@ export default function RestaurantDetails() {
     const [activeTab, setActiveTab] = useState("");
     const [modalOpen, setModalOpen] = useState(false);
     const [categoryFilters, setCategoryFilters] = useState<Record<string, string | null>>({});
-    const [selectedProducts, setSelectedProducts] = useState<Record<string, boolean>>({});
     const [restaurant, setRestaurant] = useState<OneRestaurant | null>(null);
     const [productsByCategory, setProductsByCategory] = useState<Record<string, OneProduct[]>>({});
     const [isUserClickedTab, setIsUserClickedTab] = useState(false);
@@ -37,48 +31,92 @@ export default function RestaurantDetails() {
     const { isAuthenticated } = useAuth();
     const { data } = useGetRestaurant(id as string);
     const { data: productCategory } = useProductRestaurantCategory(id as string);
+    const { mutate: toggleFavorite } = useActionsFavorite();
+    const { lastRefresh } = useBasket();
 
+    const [pageByCategory, setPageByCategory] = useState<Record<string, number>>({});
     const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const listRef = useRef<HTMLUListElement | null>(null);
     const router = useRouter();
 
+    // const { data: basketData } = useGetBasketProducts();
+    // const basketProducts = basketData?.data?.data || [];
+    //
+    // const totalPrice = basketProducts.reduce(
+    //     (acc: number, item: { price: number; quantity: number }) => acc + item.price * item.quantity,
+    //     0
+    // );
+    // const totalCount = basketProducts.reduce(
+    //     (acc: number, item: { quantity: number }) => acc + item.quantity,
+    //     0
+    // );
+    //
+    // const minOrderPrice = 500;
+    // const progressPercent = Math.min((totalPrice / minOrderPrice) * 100, 100);
+
+    const fetchProducts = async (categoryId: string, page: number) => {
+        const subcategoryId = categoryFilters[categoryId] ?? null;
+        const size = categoryFilters[`${categoryId}_size`] ?? null;
+        try {
+            const res = await ProductService.getRestaurantProductList(id as string, {
+                categoryId,
+                subcategoryId,
+                size,
+                limit: 10,
+                page,
+            });
+
+            if (res?.data?.data) {
+                setProductsByCategory(prevState => {
+                    const updatedProducts = { ...prevState };
+                    updatedProducts[categoryId] = page === 1
+                        ? res.data.data.products
+                        : [...(prevState[categoryId] || []), ...res.data.data.products];
+                    return updatedProducts;
+                });
+            }
+        } catch (error) {
+            console.error("Failed to fetch products:", error);
+        }
+    };
+
     useEffect(() => {
-        const fetchProducts = async () => {
-            if (!productCategory?.data?.data) return;
+        if (productCategory?.data?.data) {
+            productCategory.data.data.forEach((category: CategoryProduct) => {
+                if (!(category.id in pageByCategory)) {
+                    setPageByCategory(prev => ({
+                        ...prev,
+                        [category.id]: 1
+                    }));
+                }
+            });
+        }
+    }, [productCategory, pageByCategory]);
 
-            const newProductsByCategory: Record<string, OneProduct[]> = {};
+    const fetchProductsForAllCategories = () => {
+        if (!productCategory?.data?.data) return;
 
-            await Promise.all(
-                productCategory.data.data.map(async (category: CategoryProduct) => {
-                    const subcategoryId = categoryFilters[category.id] ?? null;
+        productCategory.data.data.forEach((category: CategoryProduct) => {
+            const currentPage = pageByCategory[category.id] || 1;
+            fetchProducts(category.id, currentPage);
+        });
+    };
 
-                    const res = await ProductService.getRestaurantProductList(id as string, {
-                        categoryId: category.id,
-                        subcategoryId: subcategoryId,
-                    });
-
-                    newProductsByCategory[category.id] = res?.data?.data || [];
-                })
-            );
-
-            setProductsByCategory(newProductsByCategory);
-        };
-
-        fetchProducts();
-    }, [productCategory, categoryFilters, id]);
+    useEffect(() => {
+        fetchProductsForAllCategories();
+    }, [productCategory, categoryFilters, id, lastRefresh]);
 
     useEffect(() => {
         const observerOptions = {
             root: null,
             rootMargin: "0px 0px -70% 0px",
-            threshold: 0.1,
+            threshold: 0.01,
         };
 
         const observerCallback = (entries: IntersectionObserverEntry[]) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const visibleCategoryName = entry.target.getAttribute('data-category-name');
-                    console.log("Visible category:", visibleCategoryName);  // Перевірка
                     if (visibleCategoryName && visibleCategoryName !== activeTab) {
                         setActiveTab(visibleCategoryName);
                     }
@@ -103,7 +141,6 @@ export default function RestaurantDetails() {
 
     useEffect(() => {
         if (data?.data?.data) {
-            console.log(data.data.data);
             setRestaurant(data.data.data);
         }
     }, [data]);
@@ -155,16 +192,27 @@ export default function RestaurantDetails() {
         router.push("/profile");
     };
 
-    const toggleFavoriteProduct = (id: number) => {
+    const toggleFavoriteProduct = (id: string) => {
         if (!isAuthenticated) {
             setModalOpen(true);
             return;
         }
 
-        setSelectedProducts((prev) => ({
-            ...prev,
-            [id]: !prev[id],
-        }));
+        toggleFavorite({ productId: id, restaurantId: null, type: 'product' }, {
+            onSuccess: (res) => {
+                setProductsByCategory(prevState => {
+                    const updatedProducts = { ...prevState };
+                    const updatedProduct = res.data.data;
+                    const categoryId = updatedProduct.categoryId;
+                    updatedProducts[categoryId] = updatedProducts[categoryId]?.map(product =>
+                        product.id === updatedProduct.id
+                            ? { ...product, isFavorite: updatedProduct.isFavorite }
+                            : product
+                    );
+                    return updatedProducts;
+                });
+            },
+        });
     };
 
     return (
@@ -221,10 +269,6 @@ export default function RestaurantDetails() {
                                         <p className="text_item_block_info_restaurant_page">{restaurant?.cookingTime} хв</p>
                                     </div>
                                 </div>
-                                {/*<div className="box_content_close_restaurant">*/}
-                                {/*    <RestCloseSvg className="icon_close_restaurant_page"/>*/}
-                                {/*    <p className="text_close_restaurant_page">Зачинено до 10:00</p>*/}
-                                {/*</div>*/}
                             </div>
                         </div>
                     </div>
@@ -232,7 +276,7 @@ export default function RestaurantDetails() {
 
                 <div className="container_tabs_restaurant_page">
                     <div className="list_tabs_wrapper" style={{ position: 'relative' }}>
-                        <ul className={`list_tabs_foods ${showLeftArrow || showRightArrow ? "scrollable" : ""}`} ref={listRef} >
+                        <ul className={`list_tabs_foods ${showLeftArrow || showRightArrow ? "scrollable" : ""}`} ref={listRef}>
                             {productCategory?.data?.data.map((category: CategoryProduct) => (
                                 <li
                                     key={category.id}
@@ -249,7 +293,7 @@ export default function RestaurantDetails() {
 
                         {showLeftArrow && (
                             <div
-                                className="arrow-left"
+                                className="arrow-left restaurant-arrow"
                                 onClick={() => listRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
                             >
                                 <ArrowSvg className="icon_arrow_right" />
@@ -258,7 +302,7 @@ export default function RestaurantDetails() {
 
                         {showRightArrow && (
                             <div
-                                className="arrow-right"
+                                className="arrow-right restaurant-arrow"
                                 onClick={() => listRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
                             >
                                 <ArrowSvg className="icon_arrow_right" />
@@ -270,6 +314,8 @@ export default function RestaurantDetails() {
                 <div className="container_categories_with_products">
                     {productCategory?.data?.data.map((category: CategoryProduct) => {
                         const subcategories = category.subcategories || [];
+                        const sizes = category.sizes || [];
+                        const products = productsByCategory[category.id] || [];
 
                         return (
                             <div
@@ -284,23 +330,37 @@ export default function RestaurantDetails() {
                             >
                                 <h3 className="category_title">{category.name}</h3>
 
-                                {subcategories.length > 0 && (
-                                    <SubcategoryTabs
-                                        subcategories={subcategories}
-                                        activeTab={categoryFilters[category.id] || null}
-                                        onTabChange={(subId) => {
+                                <div className="container_filters_restaurant">
+                                    {subcategories.length > 0 && (
+                                        <SubcategoryTabs
+                                            subcategories={subcategories}
+                                            activeTab={categoryFilters[category.id] || null}
+                                            onTabChange={(subId) => {
+                                                setCategoryFilters(prev => ({
+                                                    ...prev,
+                                                    [category.id]: subId || null,
+                                                }));
+                                            }}
+                                        />
+                                    )}
+
+                                    <SizeTabs
+                                        sizes={sizes}
+                                        activeSize={categoryFilters[`${category.id}_size`] || null}
+                                        onSizeChange={(id: string | null) => {
                                             setCategoryFilters(prev => ({
                                                 ...prev,
-                                                [category.id]: subId || null,
+                                                [`${category.id}_size`]: id || null,
                                             }));
                                         }}
                                     />
-                                )}
+                                </div>
 
-                                <div className="container_products rows">
+                                <div
+                                    className="container_products rows"
+                                >
                                     <ProductList
-                                        products={productsByCategory[category.id] || []}
-                                        selectedProduct={selectedProducts}
+                                        products={products}
                                         toggleFavorite={toggleFavoriteProduct}
                                     />
                                 </div>
@@ -309,6 +369,28 @@ export default function RestaurantDetails() {
                     })}
                 </div>
             </div>
+
+            {/*<div className="box_custom_footer_cart_progress_bar">*/}
+            {/*    <div className={`container_progress_bar ${totalPrice === 0 ? 'hide_bar' : ''}`}>*/}
+            {/*        <p className="text_progress_bar">*/}
+            {/*            <span className="text_free_delivery">До безкоштовної доставки:</span>*/}
+            {/*            <span className="minOrderPrice">{Math.max(minOrderPrice - totalPrice, 0)}</span>*/}
+            {/*            <span className="text_currency_progress_bar">грн</span>*/}
+            {/*        </p>*/}
+            {/*        <div className="progress_bar_container">*/}
+            {/*            <div*/}
+            {/*                className="progress_bar_filled"*/}
+            {/*                style={{ width: `${progressPercent}%` }}*/}
+            {/*            ></div>*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+
+            {/*    <button className="btn_add_to_cart_product_page">*/}
+            {/*        <span className="text_add_to_cart_product_page">Кошик</span>*/}
+            {/*        <span className="number_product">{totalCount}</span>*/}
+            {/*        <span className="number_add_to_cart_product_page">({totalPrice} грн)</span>*/}
+            {/*    </button>*/}
+            {/*</div>*/}
 
             <RegistrationModal isOpen={modalOpen} onClose={toggleModal} />
         </>

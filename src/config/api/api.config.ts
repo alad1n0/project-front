@@ -24,3 +24,8 @@ export const getTopCategoryRestaurant = () => `/categories/get-top`
 
 export const getProductRestaurantCategory = (id: string) => `/products/get-product-restaurants-category/${id}`
 export const getProductRestaurant = (id: string) => `/products/get-product-restaurants/${id}`
+export const getOneProduct = (id: string) => `/products/get-product/${id}`
+
+export const countProductBasket = () => `/basket/count`
+export const actionsBasket = () => `/basket/actions-basket`
+export const getBasketProducts = () => `/basket/product-basket`

@@ -1,5 +1,5 @@
 import instance from "@/services/api/interceptors.api";
-import {getProductRestaurant, getProductRestaurantCategory} from "@/config/api/api.config";
+import {getOneProduct, getProductRestaurant, getProductRestaurantCategory} from "@/config/api/api.config";
 import {ProductParams} from "@/types/product/interface";
 
 export const ProductService = {
@@ -11,5 +11,9 @@ export const ProductService = {
         url: getProductRestaurant(id),
         method: 'GET',
         params
+    }),
+    getOneProduct: (id: string) => instance({
+        url: getOneProduct(id),
+        method: 'GET',
     }),
 };

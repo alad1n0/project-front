@@ -12,6 +12,7 @@ interface IChildSubContainerAuth {
 const MainLayout: FC<IChildSubContainerAuth> = ({ children }) => {
     const pathname = usePathname();
     const isRestaurantPage = pathname.startsWith("/restaurant/");
+    const isProductPage = pathname.startsWith("/product/");
 
     const [isMobile, setIsMobile] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
@@ -39,7 +40,7 @@ const MainLayout: FC<IChildSubContainerAuth> = ({ children }) => {
             <main className={`main-content-container ${isRestaurantPage && isMobile ? 'main-content-container-res' : ''}`}>
                 {children}
             </main>
-            {!(isRestaurantPage && isMobile) && <Footer /> }
+            {!(isRestaurantPage && isMobile || isProductPage && isMobile) && <Footer /> }
         </div>
     );
 };

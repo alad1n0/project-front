@@ -1,60 +1,102 @@
-import React, { useState } from "react";
-import {cn} from "@/helpers/cn";
-import {CardSvg, HeartDislikeSvg, HeartLikeSvg, MinesSvg, PlusSvg} from "@/assets";
+import React, { useEffect, useState } from "react";
+import { cn } from "@/helpers/cn";
+import { CardSvg, HeartDislikeSvg, HeartLikeSvg, MinesSvg, PlusSvg } from "@/assets";
 import Link from "next/link";
+import { useActionsBasket } from "@/screens/main/hooks/basket/useActionsBasket";
+import { useBasket } from "@/provider/BasketProvider";
+import { getOrCreateSessionId } from "@/utils/session/session";
+import {useAuth} from "@/provider/AuthProvider";
+import {ProductListProps, Products} from "@/types/product/interface";
 
-interface ProductList {
-    id: number;
-    name: string;
-    image: string;
-    weight: number;
-    description: string;
-    price: number;
-}
+const ProductList: React.FC<ProductListProps> = ({ products, toggleFavorite }) => {
+    const [ cart, setCart ] = useState<Record<string, number>>({});
+    const { mutate: updateBasket } = useActionsBasket();
+    const { isAuthenticated } = useAuth();
+    const { refresh } = useBasket();
 
-interface ProductListProps {
-    products: ProductList[];
-    selectedProduct: Record<number, boolean>;
-    toggleFavorite: (id: number) => void;
-}
-
-const ProductList: React.FC<ProductListProps> = ({ products, selectedProduct, toggleFavorite }) => {
-    const [cart, setCart] = useState<Record<number, number>>({});
-
-    const addProduct = (id: number) => {
-        setCart(prev => ({
-            ...prev,
-            [id]: (prev[id] || 0) + 1
-        }));
-    };
-
-    const removeProduct = (id: number) => {
-        setCart(prev => {
-            const newCount = (prev[id] || 0) - 1;
-            if (newCount <= 0) {
-                const newCart = { ...prev };
-                delete newCart[id];
-                return newCart;
+    useEffect(() => {
+        const initialCart: Record<string, number> = {};
+        products.forEach((product) => {
+            if (product.quantityInBasket && product.quantityInBasket > 0) {
+                initialCart[product.id] = product.quantityInBasket;
             }
-            return {
-                ...prev,
-                [id]: newCount
-            };
         });
+        setCart(initialCart);
+    }, [products]);
+
+    const addProduct = (product: Products) => {
+        const newQuantity = (cart[product.id] || 0) + 1;
+
+        updateBasket(
+            {
+                productId: product.id,
+                quantity: newQuantity,
+                restaurantId: product.restaurantId,
+                sessionId: !isAuthenticated ? getOrCreateSessionId() : null,
+            },
+            {
+                onSuccess: () => {
+                    setCart((prev) => ({
+                        ...prev,
+                        [product.id]: newQuantity,
+                    }));
+                    refresh();
+                },
+            }
+        );
     };
 
-    const deleteProduct = (id: number) => {
-        setCart(prev => {
-            const newCart = { ...prev };
-            delete newCart[id];
-            return newCart;
-        });
+    const removeProduct = (product: Products) => {
+        const newQuantity = (cart[product.id] || 0) - 1;
+
+        updateBasket(
+            {
+                productId: product.id,
+                quantity: Math.max(newQuantity, 0),
+                restaurantId: product.restaurantId,
+                sessionId: !isAuthenticated ? getOrCreateSessionId() : null,
+            },
+            {
+                onSuccess: () => {
+                    if (newQuantity <= 0) {
+                        const newCart = { ...cart };
+                        delete newCart[product.id];
+                        setCart(newCart);
+                    } else {
+                        setCart((prev) => ({
+                            ...prev,
+                            [product.id]: newQuantity,
+                        }));
+                    }
+                    refresh();
+                },
+            }
+        );
+    };
+
+    const deleteProduct = (product: Products) => {
+        updateBasket(
+            {
+                productId: product.id,
+                quantity: 0,
+                restaurantId: product.restaurantId,
+                sessionId: !isAuthenticated ? getOrCreateSessionId() : null,
+            },
+            {
+                onSuccess: () => {
+                    const newCart = { ...cart };
+                    delete newCart[product.id];
+                    setCart(newCart);
+                    refresh();
+                },
+            }
+        );
     };
 
     return (
         <>
             {products.map((product) => {
-                const isSelected = selectedProduct[product.id] || false;
+                const isSelected = product.isFavorite;
                 const count = cart[product.id] || 0;
                 const isAdded = count > 0;
 
@@ -68,9 +110,13 @@ const ProductList: React.FC<ProductListProps> = ({ products, selectedProduct, to
                                     toggleFavorite(product.id);
                                 }}
                             >
-                                {isSelected ? <HeartLikeSvg className="btn_add_wishlist_svg" /> : <HeartDislikeSvg className="btn_add_wishlist_svg" />}
+                                {isSelected ? (
+                                    <HeartLikeSvg className="btn_add_wishlist_svg" />
+                                ) : (
+                                    <HeartDislikeSvg className="btn_add_wishlist_svg" />
+                                )}
                             </button>
-                            <Link className="link_image_product" href="#">
+                            <Link className="link_image_product" href={`/product/${product.id}`}>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img className="image_item_product" src={product.image} alt={product.name} />
                             </Link>
@@ -78,31 +124,48 @@ const ProductList: React.FC<ProductListProps> = ({ products, selectedProduct, to
 
                         <div className="box_info_product">
                             <div className="box_top_info_product">
-                                <p className="gram_size_product"><span>{product.weight} г</span></p>
-                                <Link className="link_title_product" href="#"><h3>{product.name}</h3></Link>
+                                <p className="gram_size_product">
+                                    <span>{product.weight} г</span>
+                                </p>
+                                <Link className="link_title_product" href={`/product/${product.id}`}>
+                                    <h3>{product.name}</h3>
+                                </Link>
                                 <p className="composition_product">{product.description}</p>
                             </div>
 
                             <div className="box_bottom_info_product">
-                                <div className="box_price_product"><p className="price_product">{product.price} грн</p></div>
+                                <div className="box_price_product">
+                                    <p className="price_product">{product.price} грн</p>
+                                </div>
 
-                                <div className="box_add_product_calc">
-                                    <button type="button" className="btn_delete_product_calc" onClick={() => deleteProduct(product.id)}>
-                                        <CardSvg className="icon_delete_product_calc"/>
+                                <div className={cn("box_add_product_calc", {
+                                    added: isAdded,
+                                    more_one: count > 1,
+                                })}>
+                                    <button
+                                        type="button"
+                                        className="btn_delete_product_calc"
+                                        onClick={() => deleteProduct(product)}
+                                    >
+                                        <CardSvg className="icon_delete_product_calc" />
                                     </button>
 
                                     <button
                                         type="button"
                                         className="btn_minus_product_calc"
-                                        onClick={() => removeProduct(product.id)}
+                                        onClick={() => removeProduct(product)}
                                         disabled={count === 0}
                                     >
-                                        <MinesSvg className="icon_minus_product_calc"/>
+                                        <MinesSvg className="icon_minus_product_calc" />
                                     </button>
 
                                     <p className="count_product_calc">{count}</p>
 
-                                    <button type="button" className="btn_add_product_calc" onClick={() => addProduct(product.id)}>
+                                    <button
+                                        type="button"
+                                        className="btn_add_product_calc"
+                                        onClick={() => addProduct(product)}
+                                    >
                                         <PlusSvg className="icon_add_product_calc" />
                                     </button>
                                 </div>

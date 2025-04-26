@@ -21,12 +21,14 @@ import {Restaurant} from "@/types/restaurant/interfaces";
 import {useGetTopRestaurantCategory} from "@/screens/main/hooks/restaurant-category/useGetTopRestaurantCategory";
 import {RestaurantCategory} from "@/types/restaurant-category/interface";
 import {useProductRestaurantCategory} from "@/screens/main/hooks/product/useProductRestaurantCategory";
-import {CategoryProduct, ProductParams} from "@/types/product/interface";
+import {CategoryProduct, ProductParams, Products} from "@/types/product/interface";
 import {useGetProductRestaurantList} from "@/screens/main/hooks/product/useGetProductRestaurantList";
 import SubcategoryTabs from "@/components/ui/tabs/Tabs";
+import SizeTabs from "@/components/ui/tabs/SizeTabs";
+import {useBasket} from "@/provider/BasketProvider";
 
 const Home: React.FC = () => {
-    const [selectedProducts, setSelectedProducts] = useState<Record<number, boolean>>({});
+    const [products, setProducts] = useState<Products[]>([]);
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [restaurantCategory, setRestaurantCategory] = useState<RestaurantCategory[]>([]);
     const [isFoodOpen, setIsFoodOpen] = useState(false);
@@ -36,12 +38,19 @@ const Home: React.FC = () => {
     const [showLeftArrow, setShowLeftArrow] = useState(false);
     const [showRightArrow, setShowRightArrow] = useState(false);
     const [activeTab, setActiveTab] = useState("");
+    const [page, setPage] = useState(1);
     const listRef = useRef<HTMLUListElement | null>(null);
     const { isAuthenticated } = useAuth();
+    
     const router = useRouter();
+    const { lastRefresh } = useBasket();
+    
     const [productParams, setProductParams] = useState<ProductParams>({
         categoryId: null,
         subcategoryId: null,
+        size: null,
+        limit: 6,
+        page: 1
     });
 
     const foodOptions = ["Від дешевших до дорогих", "Від дорогих до дешевших", "За популярністю"];
@@ -49,16 +58,30 @@ const Home: React.FC = () => {
     const { data } = useGetTopRestaurant();
     const { mutate: toggleFavorite } = useActionsFavorite();
     const { data: topRestaurantCategory } = useGetTopRestaurantCategory();
-    const { data: productCategory } = useProductRestaurantCategory("6619cc60-485b-4258-8be9-3a254f55e94f")
-    const { data: productList, refetch } = useGetProductRestaurantList("6619cc60-485b-4258-8be9-3a254f55e94f", productParams);
+    const { data: productCategory } = useProductRestaurantCategory("908030de-9010-4d05-b7c1-8be3447f1af2")
+    const { data: productList, refetch } = useGetProductRestaurantList("908030de-9010-4d05-b7c1-8be3447f1af2", productParams);
+
+    const hasTabs = productCategory?.data?.data.find(
+        (cat: CategoryProduct) => cat.name === activeTab
+    )?.subcategories?.length > 0;
+
+    useEffect(() => {
+        refetch();
+    }, [lastRefresh, refetch]);
 
     useEffect(() => {
         const categories: CategoryProduct[] = productCategory?.data?.data || [];
         const selectedCategory = categories.find(cat => cat.name === activeTab);
 
         if (selectedCategory) {
-            console.log()
-            setProductParams({ categoryId: selectedCategory.id, subcategoryId: null });
+            setProducts([]);
+            setPage(1);
+            setProductParams(prev => ({
+                ...prev,
+                categoryId: selectedCategory.id,
+                subcategoryId: null,
+                page: 1,
+            }));
         }
     }, [activeTab, productCategory]);
 
@@ -66,7 +89,7 @@ const Home: React.FC = () => {
         if (productParams.categoryId || productParams.subcategoryId) {
             refetch();
         }
-    }, [productParams, refetch]);
+    }, [productParams, productParams.page]);
 
     useEffect(() => {
         if (productCategory?.data?.data?.length > 0) {
@@ -79,6 +102,13 @@ const Home: React.FC = () => {
             setRestaurants(data.data.data);
         }
     }, [data]);
+
+    useEffect(() => {
+        if (productList?.data?.data.products) {
+            const newProducts = productList.data.data.products;
+            setProducts(prev => page === 1 ? newProducts : [...prev, ...newProducts]);
+        }
+    }, [productList]);
 
     useEffect(() => {
         if (topRestaurantCategory?.data?.data) {
@@ -119,13 +149,32 @@ const Home: React.FC = () => {
         router.push("/profile");
     };
 
+    const toggleFavoriteProduct = (id: string) => {
+        if (!isAuthenticated) {
+            setModalOpen(true);
+            return;
+        }
+
+        toggleFavorite({ productId: id, restaurantId: null, type: 'product' }, {
+            onSuccess: (res) => {
+                setProducts((prev) =>
+                    prev.map((product) =>
+                        product.id === res.data.data.id
+                            ? { ...product, isFavorite: res.data.data.isFavorite }
+                            : product
+                    )
+                );
+            },
+        });
+    };
+
     const toggleFavoriteRestaurant = (id: string) => {
         if (!isAuthenticated) {
             setModalOpen(true);
             return;
         }
 
-        toggleFavorite({ restaurantId: id }, {
+        toggleFavorite({ restaurantId: id, productId: null, type: 'restaurant' }, {
             onSuccess: (res) => {
                 setRestaurants((prev) =>
                     prev.map((restaurant) =>
@@ -138,21 +187,17 @@ const Home: React.FC = () => {
         });
     };
 
-    const toggleFavoriteProduct = (id: number) => {
-        if (!isAuthenticated) {
-            setModalOpen(true);
-            return;
-        }
-
-        setSelectedProducts((prev) => ({
-            ...prev,
-            [id]: !prev[id],
-        }));
-    };
-
     const handleSelect = (option: string) => {
         setSelectedFood(option);
         setIsFoodOpen(false);
+    };
+
+    const handleLoadMore = () => {
+        setPage(prev => {
+            const nextPage = prev + 1;
+            setProductParams(p => ({ ...p, page: nextPage }));
+            return nextPage;
+        });
     };
 
     return (
@@ -183,10 +228,6 @@ const Home: React.FC = () => {
                 <div className="popular_categories">
                     <div className="popular_categories_title">
                         <h2>Популярні категорії</h2>
-                        <Link className="view_all_button_link" href="#">
-                            <p className="view_all_button_text">Показати все</p>
-                            <ArrowSvg className="icon_arrow_view_all"/>
-                        </Link>
                     </div>
                     <div className="popular_categories_container">
                         {restaurantCategory.map((category, index) => (
@@ -197,31 +238,30 @@ const Home: React.FC = () => {
                             </div>
                         ))}
                     </div>
+
+                    <Link href={'/restaurant'} className="link_more_products">Показати все</Link>
                 </div>
 
                 <div className="restaurant_title_container">
                     <div className="box_top_section_restaurant">
                         <h2>Заклади, які вам можуть сподобатись</h2>
-                        <Link className="view_all_button_link" href={"/restaurants"}>
-                            <p className="view_all_button_text">Показати все</p>
-                            <ArrowSvg className="icon_arrow_view_all"/>
-                        </Link>
                     </div>
                 </div>
 
-                <div className="container_custom section_restaurant p-5">
+                <div className="container_custom section_restaurant">
                     <div className="container_cards_restaurant">
                         <RestaurantList
                             restaurants={restaurants}
                             toggleFavorite={toggleFavoriteRestaurant}
                         />
                     </div>
+                    <Link href={'/restaurant'} className="link_more_products">Показати все</Link>
                 </div>
 
                 <div className="section_what_to_order">
                     <h2 className="title_section_product_home_page">Що замовити у EatsEasy?</h2>
 
-                    <div className="list_tabs_wrapper" style={{ position: 'relative' }}>
+                    <div className="list_tabs_wrappers" style={{ position: 'relative' }}>
                         <ul className={`list_tabs_foods ${showLeftArrow || showRightArrow ? "scrollable" : ""}`} ref={listRef}>
                             {productCategory?.data?.data.map((category: CategoryProduct) => (
                                 <li
@@ -236,7 +276,7 @@ const Home: React.FC = () => {
 
                         {showLeftArrow && (
                             <div
-                                className="arrow-left"
+                                className="arrow-left main-arrows"
                                 onClick={() => listRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
                             >
                                 <ArrowSvg className="icon_arrow_right" />
@@ -245,7 +285,7 @@ const Home: React.FC = () => {
 
                         {showRightArrow && (
                             <div
-                                className="arrow-right"
+                                className="arrow-right main-arrows"
                                 onClick={() => listRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
                             >
                                 <ArrowSvg className="icon_arrow_right" />
@@ -253,62 +293,93 @@ const Home: React.FC = () => {
                         )}
                     </div>
 
-                    <div className="container_filter">
-                        <SubcategoryTabs
-                            subcategories={productCategory?.data?.data.find((cat: CategoryProduct) => cat.name === activeTab)?.subcategories || []}
-                            activeTab={productParams.subcategoryId}
-                            onTabChange={(id) => setProductParams({ ...productParams, subcategoryId: id || null })}
-                        />
+                    <div className="container_filter"
+                         style={{
+                             display: "flex",
+                             justifyContent: "space-between",
+                             alignItems: "flex-start",
+                             gap: hasTabs ? "16px" : "0px",
+                         }}
+                    >
+                        {hasTabs ? (
+                            <SubcategoryTabs
+                                subcategories={
+                                    productCategory?.data?.data.find((cat: CategoryProduct) => cat.name === activeTab)?.subcategories || []
+                                }
+                                activeTab={productParams.subcategoryId}
+                                onTabChange={(id) => setProductParams({ ...productParams, subcategoryId: id || null })}
+                            />
+                        ) : (
+                            <div style={{ flex: 1 }} />
+                        )}
 
-                        <div className="box_top_filter">
-                            <div className="box_select">
-                                <div
-                                    className={`box_top_select ${isFoodOpen ? "open" : ""}`}
-                                    onClick={() => toggleDropdown()}
-                                >
-                                    <p className="text_selected">{selectedFood}</p>
-                                    <ArrowSvg className="icon_arrow_select"/>
+                        <div className="container_filter_bottom">
+                            {productCategory?.data?.data?.find((c: CategoryProduct) => c.name === activeTab)?.sizes?.length > 0 && (
+                                <SizeTabs
+                                    sizes={productCategory?.data?.data?.find((c: CategoryProduct) => c.name === activeTab)?.sizes || []}
+                                    activeSize={productParams.size}
+                                    onSizeChange={(id) => {
+                                        setProductParams({ ...productParams, size: id || null })}
+                                    }
+                                />
+                            )}
+
+                            <div className="box_top_filter">
+                                <div className="box_select">
+                                    <div
+                                        className={`box_top_select ${isFoodOpen ? "open" : ""}`}
+                                        onClick={() => toggleDropdown()}
+                                    >
+                                        <p className="text_selected">{selectedFood}</p>
+                                        <ArrowSvg className="icon_arrow_select" />
+                                    </div>
+                                    <ul className={`dropdown_list ${isFoodOpen ? "open" : ""}`}>
+                                        {foodOptions.map((option) => (
+                                            <li
+                                                key={option}
+                                                className={`item_option_select ${selectedFood === option ? "active" : ""}`}
+                                                onClick={() => handleSelect(option)}
+                                            >
+                                                {option}
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
-                                <ul className={`dropdown_list ${isFoodOpen ? "open" : ""}`}>
-                                    {foodOptions.map((option) => (
-                                        <li
-                                            key={option}
-                                            className={`item_option_select ${selectedFood === option ? "active" : ""}`}
-                                            onClick={() => handleSelect(option)}
-                                        >
-                                            {option}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                            <div className="box_markup_filter">
-                                <button
-                                    type="button"
-                                    className={`btn_markup_filter ${layout === "rows" ? "active" : ""}`}
-                                    onClick={() => setLayout("rows")}
-                                >
-                                    <RowSvg className="icon_markup_filter" />
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`btn_markup_filter ${layout === "columns" ? "active" : ""}`}
-                                    onClick={() => setLayout("columns")}
-                                >
-                                    <ColumSvg className="icon_markup_filter" />
-                                </button>
+
+                                <div className="box_markup_filter">
+                                    <button
+                                        type="button"
+                                        className={`btn_markup_filter ${layout === "rows" ? "active" : ""}`}
+                                        onClick={() => setLayout("rows")}
+                                    >
+                                        <RowSvg className="icon_markup_filter" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`btn_markup_filter ${layout === "columns" ? "active" : ""}`}
+                                        onClick={() => setLayout("columns")}
+                                    >
+                                        <ColumSvg className="icon_markup_filter" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div className={`container_products ${layout}`}>
                         <ProductList
-                            products={productList?.data?.data || []}
-                            selectedProduct={selectedProducts}
+                            products={products}
                             toggleFavorite={toggleFavoriteProduct}
                         />
                     </div>
 
-                    <a href="#" className="link_more_products">Показати ще</a>
+                    {productList?.data?.data.meta?.totalPages > page && (
+                        <div>
+                            <button onClick={handleLoadMore} className="link_more_products">
+                                Показати ще
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="partner_container">

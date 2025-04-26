@@ -14,7 +14,6 @@ interface TabsProps {
 
 const SubcategoryTabs: React.FC<TabsProps> = ({ subcategories, onTabChange, activeTab }) => {
     const handleTabClick = (id: string | null) => {
-        console.log(activeTab);
         onTabChange(id);
     };
 

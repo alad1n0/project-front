@@ -89,7 +89,7 @@ export default function Restaurant() {
             return;
         }
 
-        toggleFavorite({ restaurantId: id }, {
+        toggleFavorite({ restaurantId: id, productId: null, type: 'restaurant' }, {
             onSuccess: (res) => {
                 setRestaurants((prev) =>
                     prev.map((restaurant) =>

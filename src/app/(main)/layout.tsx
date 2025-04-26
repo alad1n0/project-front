@@ -6,6 +6,7 @@ import {AuthProvider} from "@/provider/AuthProvider";
 import {SessionProvider} from "next-auth/react";
 import React from "react";
 import "./globals.css";
+import {BasketProvider} from "@/provider/BasketProvider";
 
 const queryClient = new QueryClient();
 
@@ -14,9 +15,11 @@ export default function RootLayout({children}: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
             <SessionProvider>
                 <AuthProvider>
-                    <MainLayout>
-                        {children}
-                    </MainLayout>
+                    <BasketProvider>
+                        <MainLayout>
+                            {children}
+                        </MainLayout>
+                    </BasketProvider>
                 </AuthProvider>
             </SessionProvider>
         </QueryClientProvider>

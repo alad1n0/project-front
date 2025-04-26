@@ -5,25 +5,33 @@ import RestaurantList from "@/components/main/restaurant/RestaurantList";
 import {Restaurant} from "@/types/restaurant/interfaces";
 import {useGetSavedRestaurantList} from "@/components/main/profile/hooks/useGetSavedRestaurantList";
 import {useActionsFavorite} from "@/screens/main/hooks/favorite/useActionsFavorite";
+import {Products} from "@/types/product/interface";
+import ProductList from "@/components/main/product/ProductList";
 
 const categories = ["Заклади", "Їжа"];
 
 const SavedItems = () => {
     const [activeTab, setActiveTab] = useState(categories[0]);
+    const [products, setProducts] = useState<Products[]>([]);
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
 
     const { data } = useGetSavedRestaurantList();
     const { mutate: toggleFavorite } = useActionsFavorite();
 
     useEffect(() => {
-        if (data?.data?.data) {
-            console.log(data.data.data);
-            setRestaurants(data.data.data);
+        if (data?.data?.data?.restaurants) {
+            setRestaurants(data.data.data.restaurants);
+        }
+    }, [data]);
+
+    useEffect(() => {
+        if (data?.data?.data?.products) {
+            setProducts(data.data.data.products);
         }
     }, [data]);
 
     const toggleFavoriteRestaurant = (id: string) => {
-        toggleFavorite({ restaurantId: id }, {
+        toggleFavorite({ restaurantId: id, productId: null, type: 'restaurant' }, {
             onSuccess: (res) => {
                 if (res.data.data.isFavorite) {
                     setRestaurants((prev) =>
@@ -40,12 +48,30 @@ const SavedItems = () => {
         });
     };
 
+    const toggleFavoriteProduct = (id: string) => {
+        toggleFavorite({ productId: id, restaurantId: null, type: 'product' }, {
+            onSuccess: (res) => {
+                if (res.data.data.isFavorite) {
+                    setProducts((prev) =>
+                        prev.map((product) =>
+                            product.id === res.data.data.id
+                                ? { ...product, isFavorite: res.data.data.isFavorite }
+                                : product
+                        )
+                    );
+                } else {
+                    setProducts((prev) => prev.filter((product) => product.id !== res.data.data.id));
+                }
+            },
+        });
+    };
+
     return (
         <div className="container_saved_items">
             <h1>Збережене</h1>
 
             <div className="tabs_saved_items">
-                {(restaurants.length > 0 /* || products.length > 0 */) && (
+                {(restaurants.length > 0 || products.length > 0) && (
                     <ul className="list_tabs_saved">
                         {categories.map((category) => (
                             <li
@@ -73,10 +99,10 @@ const SavedItems = () => {
                 {activeTab === "Їжа" && (
                     <div className="container_custom section_products">
                         <div className="container_cards_products">
-                            {/* <ProductList
-                            products={products}
-                            toggleFavorite={toggleFavoriteProduct}
-                        /> */}
+                            <ProductList
+                                products={products}
+                                toggleFavorite={toggleFavoriteProduct}
+                            />
                         </div>
                     </div>
                 )}

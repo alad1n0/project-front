@@ -1,3 +1,5 @@
 export interface ActionsFavoriteData {
-    restaurantId: string;
+    restaurantId: string | null;
+    productId: string | null;
+    type: string;
 }

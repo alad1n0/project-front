@@ -18,12 +18,15 @@ import CartModal from "@/components/header/modal/CartModal";
 import CitySelector from "@/components/ui/select/CitySelect";
 import { useAuth } from "@/provider/AuthProvider";
 import {useRouter} from "next/navigation";
+import { useBasket } from "@/provider/BasketProvider";
 
 export default function Header() {
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
+
+    const { count } = useBasket();
     const { isAuthenticated } = useAuth();
     const router = useRouter();
 
@@ -110,7 +113,9 @@ export default function Header() {
                                 >
                                     <span className="box_icon_cart_header_desktop">
                                         <BasketSvg className="icon_cart_header_desktop"/>
-                                        <span className="number_product">0</span>
+                                        {count !== null && count > 0 && (
+                                            <span className="number_product">{count}</span>
+                                        )}
                                     </span>
                                     <p className="text_cart_header_desktop">Кошик</p>
                                 </button>
@@ -149,7 +154,9 @@ export default function Header() {
                             >
                                 <span className="box_icon_cart_header_desktop">
                                     <BasketSvg className="icon_cart_header_desktop"/>
-                                    <span className="number_product">0</span>
+                                    {count !== null && count > 0 && (
+                                        <span className="number_product">{count}</span>
+                                    )}
                                 </span>
                                 <p className="text_cart_header_desktop">Кошик</p>
                             </button>

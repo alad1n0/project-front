@@ -7,6 +7,7 @@ import {BasketSvg, EmptyHomeSvg, HomeSvg, ProfileSvg, SearchSvg} from "@/assets"
 import RegistrationModal from "@/components/header/modal/RegistrationModal";
 import {useAuth} from "@/provider/AuthProvider";
 import {usePathname, useRouter} from "next/navigation";
+import {useBasket} from "@/provider/BasketProvider";
 
 export default function Header() {
     const [cartOpen, setCartOpen] = useState(false);
@@ -15,6 +16,8 @@ export default function Header() {
     const { isAuthenticated } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
+
+    const { count } = useBasket();
 
     useEffect(() => {
         if (pathname === "/profile") {
@@ -97,7 +100,9 @@ export default function Header() {
                     onClick={toggleCart}
                 >
                     <div className="box_icon_item_footer">
-                        <span className="number_product_add_cart_footer">0</span>
+                        {count !== null && count > 0 && (
+                            <span className="number_product_add_cart_footer">{count}</span>
+                        )}
                         <BasketSvg className="icon_item_footer_navigation_menu" />
                     </div>
                     <p className="text_item_footer_navigation_menu">Кошик</p>

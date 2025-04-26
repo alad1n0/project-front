@@ -10,9 +10,14 @@ const instance = axios.create({
 instance.interceptors.request.use(async config => {
     if (typeof window !== "undefined") {
         const accessToken = localStorage.getItem('access_token');
+        const sessionId = Cookies.get('session');
 
         if (accessToken) {
             config.headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+
+        if (sessionId) {
+            config.params = { ...config.params, sessionId };
         }
     }
 
