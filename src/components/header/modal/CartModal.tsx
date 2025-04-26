@@ -63,7 +63,7 @@ const CartModal: React.FC<CartModalProps> = ({ cartOpen, toggleCart }) => {
                 productId: product.id,
                 quantity: newQuantity,
                 restaurantId: product.restaurantId,
-                sessionId: !isAuthenticated ? getOrCreateSessionId() : null,
+                sessionId: !isAuthenticated ? getOrCreateSessionId() ?? null : null,
             },
             {
                 onSuccess: () => {
@@ -86,7 +86,7 @@ const CartModal: React.FC<CartModalProps> = ({ cartOpen, toggleCart }) => {
                 productId: product.id,
                 quantity: Math.max(newQuantity, 0),
                 restaurantId: product.restaurantId,
-                sessionId: !isAuthenticated ? getOrCreateSessionId() : null,
+                sessionId: !isAuthenticated ? getOrCreateSessionId() ?? null : null,
             },
             {
                 onSuccess: () => {
@@ -113,7 +113,7 @@ const CartModal: React.FC<CartModalProps> = ({ cartOpen, toggleCart }) => {
                 productId: product.id,
                 quantity: 0,
                 restaurantId: product.restaurantId,
-                sessionId: !isAuthenticated ? getOrCreateSessionId() : null,
+                sessionId: !isAuthenticated ? getOrCreateSessionId() ?? null : null,
             },
             {
                 onSuccess: () => {

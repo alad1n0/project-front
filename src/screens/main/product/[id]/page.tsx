@@ -105,7 +105,7 @@ export default function ProductPage() {
                 productId: product?.data.data.id,
                 quantity: newQuantity,
                 restaurantId: product?.data.data.restaurantId,
-                sessionId: !isAuthenticated ? getOrCreateSessionId() : null,
+                sessionId: !isAuthenticated ? getOrCreateSessionId() ?? null : null,
             },
             {
                 onSuccess: async () => {
@@ -127,7 +127,7 @@ export default function ProductPage() {
                 productId: product?.data.data.id,
                 quantity: Math.max(newQuantity, 0),
                 restaurantId: product?.data.data.restaurantId,
-                sessionId: !isAuthenticated ? getOrCreateSessionId() : null,
+                sessionId: !isAuthenticated ? getOrCreateSessionId() ?? null : null,
             },
             {
                 onSuccess: async () => {
@@ -153,7 +153,7 @@ export default function ProductPage() {
                 productId: product?.data.data.id,
                 quantity: 0,
                 restaurantId: product?.data.data.restaurantId,
-                sessionId: !isAuthenticated ? getOrCreateSessionId() : null,
+                sessionId: !isAuthenticated ? getOrCreateSessionId() ?? null : null,
             },
             {
                 onSuccess: async () => {
