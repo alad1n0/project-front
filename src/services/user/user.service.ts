@@ -6,7 +6,7 @@ import {
     updateUserInfo,
     updateUserPhone
 } from "@/config/api/api.config";
-import {Address, UserAddress, UserUpdateInfo, UserUpdatePhone} from "@/types/user/interfaces";
+import {Address, UserUpdateInfo, UserUpdatePhone} from "@/types/user/interfaces";
 
 export const UserService = {
     getUserInfo: () => instance({

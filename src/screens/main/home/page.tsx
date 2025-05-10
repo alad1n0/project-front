@@ -54,8 +54,8 @@ const Home: React.FC = () => {
     const { data } = useGetTopRestaurant();
     const { mutate: toggleFavorite } = useActionsFavorite();
     const { data: topRestaurantCategory } = useGetTopRestaurantCategory();
-    const { data: productCategory } = useProductRestaurantCategory("908030de-9010-4d05-b7c1-8be3447f1af2")
-    const { data: productList, refetch } = useGetProductRestaurantList("908030de-9010-4d05-b7c1-8be3447f1af2", productParams);
+    const { data: productCategory } = useProductRestaurantCategory("27d6a336-5011-4408-8c20-015a3d8801cd")
+    const { data: productList, refetch } = useGetProductRestaurantList("27d6a336-5011-4408-8c20-015a3d8801cd", productParams);
 
     const hasTabs = productCategory?.data?.data.find(
         (cat: CategoryProduct) => cat.name === activeTab
