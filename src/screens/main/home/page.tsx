@@ -3,13 +3,7 @@
 import React, {useEffect, useLayoutEffect, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-    ArrowSvg,
-    ColumSvg,
-    MainImage,
-    RowSvg,
-    SearchSvg,
-} from "@/assets";
+import {ArrowSvg, ColumSvg, MainImage, RowSvg, SearchSvg,} from "@/assets";
 import ProductList from "@/components/main/product/ProductList";
 import RestaurantList from "@/components/main/restaurant/RestaurantList";
 import {useGetTopRestaurant} from "@/screens/main/hooks/restaurant/useGetTopRestaurant";
@@ -26,6 +20,7 @@ import {useGetProductRestaurantList} from "@/screens/main/hooks/product/useGetPr
 import SubcategoryTabs from "@/components/ui/tabs/Tabs";
 import SizeTabs from "@/components/ui/tabs/SizeTabs";
 import {useBasket} from "@/provider/BasketProvider";
+import { motion } from "framer-motion";
 
 const Home: React.FC = () => {
     const [products, setProducts] = useState<Products[]>([]);
@@ -39,12 +34,13 @@ const Home: React.FC = () => {
     const [showRightArrow, setShowRightArrow] = useState(false);
     const [activeTab, setActiveTab] = useState("");
     const [page, setPage] = useState(1);
+
     const listRef = useRef<HTMLUListElement | null>(null);
-    const { isAuthenticated } = useAuth();
-    
-    const router = useRouter();
+
     const { lastRefresh } = useBasket();
-    
+    const { isAuthenticated } = useAuth();
+    const router = useRouter();
+
     const [productParams, setProductParams] = useState<ProductParams>({
         categoryId: null,
         subcategoryId: null,
@@ -58,8 +54,8 @@ const Home: React.FC = () => {
     const { data } = useGetTopRestaurant();
     const { mutate: toggleFavorite } = useActionsFavorite();
     const { data: topRestaurantCategory } = useGetTopRestaurantCategory();
-    const { data: productCategory } = useProductRestaurantCategory("27d6a336-5011-4408-8c20-015a3d8801cd")
-    const { data: productList, refetch } = useGetProductRestaurantList("27d6a336-5011-4408-8c20-015a3d8801cd", productParams);
+    const { data: productCategory } = useProductRestaurantCategory("908030de-9010-4d05-b7c1-8be3447f1af2")
+    const { data: productList, refetch } = useGetProductRestaurantList("908030de-9010-4d05-b7c1-8be3447f1af2", productParams);
 
     const hasTabs = productCategory?.data?.data.find(
         (cat: CategoryProduct) => cat.name === activeTab
@@ -89,7 +85,7 @@ const Home: React.FC = () => {
         if (productParams.categoryId || productParams.subcategoryId) {
             refetch();
         }
-    }, [productParams, productParams.page]);
+    }, [productParams.categoryId, productParams.subcategoryId, productParams.size, productParams.page]);
 
     useEffect(() => {
         if (productCategory?.data?.data?.length > 0) {
@@ -106,7 +102,11 @@ const Home: React.FC = () => {
     useEffect(() => {
         if (productList?.data?.data.products) {
             const newProducts = productList.data.data.products;
-            setProducts(prev => page === 1 ? newProducts : [...prev, ...newProducts]);
+            setProducts(prev => {
+                const existingIds = new Set(prev.map(p => p.id));
+                const filtered = newProducts.filter((p: Products) => !existingIds.has(p.id));
+                return page === 1 ? newProducts : [...prev, ...filtered];
+            });
         }
     }, [productList]);
 
@@ -307,7 +307,14 @@ const Home: React.FC = () => {
                                     productCategory?.data?.data.find((cat: CategoryProduct) => cat.name === activeTab)?.subcategories || []
                                 }
                                 activeTab={productParams.subcategoryId}
-                                onTabChange={(id) => setProductParams({ ...productParams, subcategoryId: id || null })}
+                                onTabChange={(id) => {
+                                    setPage(1);
+                                    setProductParams(prev => ({
+                                        ...prev,
+                                        subcategoryId: id || null,
+                                        page: 1,
+                                    }));
+                                }}
                             />
                         ) : (
                             <div style={{ flex: 1 }} />
@@ -319,8 +326,13 @@ const Home: React.FC = () => {
                                     sizes={productCategory?.data?.data?.find((c: CategoryProduct) => c.name === activeTab)?.sizes || []}
                                     activeSize={productParams.size}
                                     onSizeChange={(id) => {
-                                        setProductParams({ ...productParams, size: id || null })}
-                                    }
+                                        setPage(1);
+                                        setProductParams(prev => ({
+                                            ...prev,
+                                            size: id || null,
+                                            page: 1,
+                                        }));
+                                    }}
                                 />
                             )}
 
@@ -366,12 +378,18 @@ const Home: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className={`container_products ${layout}`}>
+                    <motion.div
+                        className={`container_products ${layout}`}
+                        key={products.map((p) => p.id).join(",")}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
                         <ProductList
                             products={products}
                             toggleFavorite={toggleFavoriteProduct}
                         />
-                    </div>
+                    </motion.div>
 
                     {productList?.data?.data.meta?.totalPages > page && (
                         <div>

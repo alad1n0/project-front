@@ -9,7 +9,7 @@ import {
     ProfileSvg,
     HeartSvg,
     HeartHeaderSvg,
-    PhoneSvg,
+    PhoneSvg, LogoSvg,
 } from "@/assets";
 import Link from "next/link";
 import RegistrationModal from "@/components/header/modal/RegistrationModal";
@@ -85,8 +85,8 @@ export default function Header() {
                             <CitySelector/>
                         </div>
 
-                        {/*<a href="#" className="logo_header_desktop"><img className="icon_logo_header_desktop"*/}
-                        {/*                                                 src="./image/icons/icon_logo.svg" alt="logo"/></a>*/}
+                        {/*<Link href={"/"} className="logo_header_desktop"><LogoSvg className="icon_logo_header_desktop" /></Link>*/}
+
                         <div className="box_phone_buttons_header_desktop">
                             <div className="box_phone_header_desktop">
                                 <a href="tel:0800204090" className="link_phone_header_desktop">

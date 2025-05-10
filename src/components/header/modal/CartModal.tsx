@@ -222,19 +222,21 @@ const CartModal: React.FC<CartModalProps> = ({ cartOpen, toggleCart }) => {
                     )}
                 </div>
 
-                <div className="container_total_order_cart">
-                    <div className="box_total_order_cart">
-                        <p className="title_total_order">Разом:</p>
-                        <p className="price_total_order">{totalPrice.toFixed(2)} грн</p>
-                    </div>
+                {!isLoading && items.length > 0 && (
+                    <div className="container_total_order_cart">
+                        <div className="box_total_order_cart">
+                            <p className="title_total_order">Разом:</p>
+                            <p className="price_total_order">{totalPrice.toFixed(2)} грн</p>
+                        </div>
 
-                    <div className="box_to_pay_order_cart">
-                        <h3 className="title_to_pay_order">До сплати:</h3>
-                        <p className="price_to_pay_order">{totalPrice.toFixed(2)} <span className="price_to_pay_currency_order">грн</span></p>
-                    </div>
+                        <div className="box_to_pay_order_cart">
+                            <h3 className="title_to_pay_order">До сплати:</h3>
+                            <p className="price_to_pay_order">{totalPrice.toFixed(2)} <span className="price_to_pay_currency_order">грн</span></p>
+                        </div>
 
-                    <a href="" className="btn_red_with_arrow">Оформити замовлення</a>
-                </div>
+                        <Link href={"/checkout"} onClick={toggleCart} className="btn_red_with_arrow">Оформити замовлення</Link>
+                    </div>
+                )}
             </div>
         </>
     );

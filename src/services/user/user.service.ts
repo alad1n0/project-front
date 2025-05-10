@@ -1,6 +1,12 @@
 import instance from "@/services/api/interceptors.api";
-import {getUserInfo, updateUserInfo, updateUserPhone} from "@/config/api/api.config";
-import {UserUpdateInfo, UserUpdatePhone} from "@/types/user/interfaces";
+import {
+    createUserAddress, deleteUserAddresses,
+    getUserInfo,
+    updateUserAddress,
+    updateUserInfo,
+    updateUserPhone
+} from "@/config/api/api.config";
+import {Address, UserAddress, UserUpdateInfo, UserUpdatePhone} from "@/types/user/interfaces";
 
 export const UserService = {
     getUserInfo: () => instance({
@@ -16,5 +22,19 @@ export const UserService = {
         url: updateUserPhone(),
         method: 'POST',
         data
+    }),
+    createUserAddress: (data: Address) => instance({
+        url: createUserAddress(),
+        method: 'POST',
+        data
+    }),
+    updateUserAddress: (id: string, data: Address) => instance({
+        url: updateUserAddress(id),
+        method: 'POST',
+        data
+    }),
+    deleteUserAddresses: (id: string) => instance({
+        url: deleteUserAddresses(id),
+        method: 'DELETE'
     }),
 };

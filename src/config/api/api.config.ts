@@ -17,7 +17,9 @@ export const getFavoriteRestaurants = () => `/favorites/get-all-favorites`
 export const getUserInfo = () => `/users/get-user-info`
 export const updateUserInfo = () => `/users/update-user-profile`
 export const updateUserPhone = () => `/users/update-user-phone`
-export const updateUserAddress = () => `/users/update-user-address`
+export const createUserAddress = () => `/users/create-user-address`
+export const updateUserAddress = (id: string) => `/users/update-user-address/${id}`
+export const deleteUserAddresses = (id: string) => `/users/delete-user-address/${id}`
 
 export const getCategoryRestaurant = () => `/categories/get-all`
 export const getTopCategoryRestaurant = () => `/categories/get-top`

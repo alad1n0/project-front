@@ -3,7 +3,7 @@ import {CloseSvg, FacebookSvg, GoogleSvg} from "@/assets";
 
 const SocialProfileComponent = () => {
     const [isFacebookConnected, setIsFacebookConnected] = useState(false);
-    const [isGoogleConnected, setIsGoogleConnected] = useState(true);
+    const [isGoogleConnected, setIsGoogleConnected] = useState(false);
 
     const toggleFacebookConnection = () => {
         setIsFacebookConnected(!isFacebookConnected);

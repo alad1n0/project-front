@@ -3,10 +3,11 @@ export interface ProfileInfo {
     phone: string;
     role: string;
     userProfile: {
+        addresses: UserAddress[];
         firstName: string;
         lastName: string;
         address: string;
-    }
+    },
 }
 
 export interface UserUpdateInfo {
@@ -19,6 +20,29 @@ export interface UserUpdatePhone {
     otp: string;
 }
 
-export interface UserUpdateAddress {
-    address: string;
+export type Address = {
+    city: string;
+    locality: string | null;
+    street: string;
+    house: string;
+    flat: string;
+    floor: string;
+    apartment: string;
+    comment: string;
+    type: string;
+    isMain: boolean;
+};
+
+export interface UserAddress {
+    id: string;
+    city: string;
+    locality: string | null;
+    street: string;
+    house: string;
+    flat: string;
+    floor: string;
+    apartment: string;
+    comment: string;
+    type: string;
+    isMain: boolean;
 }
