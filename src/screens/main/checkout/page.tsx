@@ -52,21 +52,31 @@ const Checkout = () => {
     const [openSelectId, setOpenSelectId] = useState<string | null>(null);
     const [addressTab, setAddressTab] = useState<'my' | 'other'>('my');
     const [formData, setFormData] = useState({
-        city: '',
-        locality: '',
-        street: '',
-        house: '',
-        flat: '',
-        floor: '',
-        apartment: '',
-        comment: ''
+            city: '',
+            locality: '',
+            street: '',
+            house: '',
+            flat: '',
+            floor: '',
+            apartment: '',
+            comment: ''
     });
     const [phoneCall, setPhoneCall] = useState('call');
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
 
-    const { data: userInfo } = useGetProfileInfo();
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { data: userInfo } = isAuthenticated ? useGetProfileInfo() : { data: null };
     const { mutateAsync: patchUserAddress } = usePostUpdateUserAddress();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            if (userInfo?.userProfile) {
+                setName(`${userInfo.userProfile.firstName || ''} ${userInfo.userProfile.lastName || ''}`.trim());
+                setPhone(userInfo.phone || '');
+            }
+        }
+    }, [userInfo, isAuthenticated]);
 
     const handleChange = (key: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData((prev) => ({
